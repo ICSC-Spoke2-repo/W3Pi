@@ -120,11 +120,14 @@ def prepare_background_df (df, OUT_BRANCHES, max_entries):
 # NOTE: based on random selection --> i.e. works well when max_entries > 1000
 def add_evt_to_keep_flag (df, max_entries):
 
-    # Compute total number of entries and the fraction to be kept
-    tot_entries = df.Count().GetValue()
-    frac_to_keep = 1. * max_entries / tot_entries
-
-    df = df.Define('evt_to_keep', 'add_evt_to_keep_flag({})'.format(str(frac_to_keep)))
+    if max_entries < 0:
+        # Keep all entries
+        df = df.Define('evt_to_keep', 'true')
+    else:
+        # Compute total number of entries and the fraction to be kept
+        tot_entries = df.Count().GetValue()
+        frac_to_keep = 1. * max_entries / tot_entries
+        df = df.Define('evt_to_keep', 'add_evt_to_keep_flag({})'.format(str(frac_to_keep)))
 
     return df
 
@@ -188,7 +191,7 @@ def set_target_value (df, sample_type):
 # ---------------------------------------------------------------------------------------------------
 
 # Print current RDataFrame - works only with MultiThreading disabled
-def print_dataframe (df, columns):
+def print_dataframe (df, columns, nrows = 10):
   """
   Inputs:
    - (filtered) RDataFrame
@@ -200,5 +203,5 @@ def print_dataframe (df, columns):
   print('Printing the current RDF')
 
   # Printout
-  d2 = df.Display(columns)
+  d2 = df.Display(columns, nrows)
   print(d2.AsString())
