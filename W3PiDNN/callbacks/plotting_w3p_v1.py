@@ -8,6 +8,7 @@ def PLOT_SINGLE(x, xl, lo, hi):
     plt.xlabel(xl)
     plt.xlim(lo, hi)
     plt.hist(x, bins=100, range=(lo, hi))
+    plt.close()
     return fig
 
 def PLOT_DOUBLE(x_s, x_b, xl, lo, hi):
@@ -17,6 +18,7 @@ def PLOT_DOUBLE(x_s, x_b, xl, lo, hi):
     plt.hist(x_s, bins=100, range=(lo, hi), color='#3371ff', label='signal')
     plt.hist(x_b, bins=100, range=(lo, hi), color='#ffb833', label='background')
     plt.legend(loc='upper center')
+    plt.close()
     return fig
 
 class w3pPlotCallback(keras.callbacks.Callback):

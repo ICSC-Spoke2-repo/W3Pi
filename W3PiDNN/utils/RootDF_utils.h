@@ -122,7 +122,7 @@ std::vector<int> add_final_triplet_idxs (std::vector<int> candidate_idxs, cRVecI
         for (auto triplet : triplet_list)
             if ( std::abs(L1Puppi_charge[triplet.idx0] + L1Puppi_charge[triplet.idx1] + L1Puppi_charge[triplet.idx2]) == 1 )
                 final_triplets.push_back(triplet);
-        // FIXME: ... possibly add more selections on triplets here ...
+        // ... possibly add more selections on triplets here ...
 
         //std::cout << "final_triplets: ";
         //for (auto el: final_triplets) std::cout << el.idx0 << "/" << el.idx1 << "/" << el.idx2 << ", ";
@@ -203,12 +203,21 @@ std::vector<int> add_final_triplet_idxs_from_pivot (std::vector<int> candidate_i
 
         //std::cout << " pivot idx: " << pivot_idx << " with pt = " << max_pt << std::endl;
 
-        // Make list of triplets from good_indexs as: pivot_idx + doublet
+        // Make list of triplets from good_indexs as: pivot_idx + doublet (ordered by pT)
         std::vector<triplet_idx> triplet_list;
         for (auto i = 0; i < good_indexs.size()-1; i++)
             for (auto j = i+1; j < good_indexs.size(); j++)
                 if ( good_indexs[i] != pivot_idx && good_indexs[j] != pivot_idx)
-                    triplet_list.push_back(make_triplet_idx(pivot_idx, good_indexs[i], good_indexs[j]));
+                {
+                    if ( L1Puppi_pt[good_indexs[i]] >= L1Puppi_pt[good_indexs[j]] )
+                    {
+                        triplet_list.push_back(make_triplet_idx(pivot_idx, good_indexs[i], good_indexs[j]));
+                    }
+                    else
+                    {
+                        triplet_list.push_back(make_triplet_idx(pivot_idx, good_indexs[j], good_indexs[i]));
+                    }
+                }
 
         //std::cout << " triplet_list: ";
         //for (auto el: triplet_list) std::cout << el.idx0 << "/" << el.idx1 << "/" << el.idx2 << ", ";
@@ -219,7 +228,7 @@ std::vector<int> add_final_triplet_idxs_from_pivot (std::vector<int> candidate_i
         for (auto triplet : triplet_list)
             if ( std::abs(L1Puppi_charge[triplet.idx0] + L1Puppi_charge[triplet.idx1] + L1Puppi_charge[triplet.idx2]) == 1 )
                 final_triplets.push_back(triplet);
-        // FIXME: ... possibly add more selections on triplets here ...
+        // ... possibly add more selections on triplets here ...
 
         //std::cout << " final_triplets: ";
         //for (auto el: final_triplets) std::cout << el.idx0 << "/" << el.idx1 << "/" << el.idx2 << ", ";
@@ -256,9 +265,84 @@ std::vector<int> add_final_triplet_idxs_from_pivot (std::vector<int> candidate_i
     //std::cout << std::endl;
 
     // Shuffle idxs before returning them
-    std::random_shuffle(final_idxs.begin(), final_idxs.end());
+    //std::random_shuffle(final_idxs.begin(), final_idxs.end()); // not needed anymore since we order the triplet idxs by pT
 
     return final_idxs;
+}
+
+
+// ------------------------------------------------
+// Same as add_final_triplet_idxs, but build triplet from pivot, i.e. using highest pT pion as seed
+std::vector<triplet_idx> add_all_triplet_idxs_from_pivot (std::vector<int> candidate_idxs, cRVecI L1Puppi_pdgId, cRVecI L1Puppi_charge, cRVecF L1Puppi_pt)
+{
+    // Declare output vector
+    std::vector<triplet_idx> final_triplets;
+
+    // Make list of indexes filtered on good PDG ID and with charge +/-1
+    std::vector<int> good_indexs;
+    for (auto idx : candidate_idxs)
+        if (good_pdg_id(L1Puppi_pdgId[idx]) && std::abs(L1Puppi_charge[idx]) == 1)
+            good_indexs.push_back(idx);
+    //std::cout << "- good_indexs: ";
+    //for (int i=0; i<good_indexs.size(); i++) std::cout << good_indexs[i] << "(" << L1Puppi_pt[good_indexs[i]] << "), ";
+    //std::cout << std::endl;
+
+    if (good_indexs.size() < 3) /* No triplet possible - return a fake triplet */
+    {
+        final_triplets.push_back(make_triplet_idx(-1, -1, -1));
+    }
+    else /* Make and select all triplet with Pivot */
+    {
+        // Find pivot index
+        int pivot_idx = -1.;
+        float max_pt = 0.;
+        for (auto idx : good_indexs)
+        {
+            if (L1Puppi_pt[idx] > max_pt)
+            {
+                max_pt = L1Puppi_pt[idx];
+                pivot_idx = idx;
+            }
+        }
+        //std::cout << " pivot idx: " << pivot_idx << " with pt = " << max_pt << std::endl;
+
+        // Make list of triplets from good_indexs as: pivot_idx + doublet (ordered by pT)
+        std::vector<triplet_idx> triplet_list;
+        for (auto i = 0; i < good_indexs.size()-1; i++)
+            for (auto j = i+1; j < good_indexs.size(); j++)
+                if ( good_indexs[i] != pivot_idx && good_indexs[j] != pivot_idx)
+                {
+                    if ( L1Puppi_pt[good_indexs[i]] >= L1Puppi_pt[good_indexs[j]] )
+                    {
+                        triplet_list.push_back(make_triplet_idx(pivot_idx, good_indexs[i], good_indexs[j]));
+                    }
+                    else
+                    {
+                        triplet_list.push_back(make_triplet_idx(pivot_idx, good_indexs[j], good_indexs[i]));
+                    }
+                }
+        //std::cout << " triplet_list: ";
+        //for (auto el: triplet_list) std::cout << el.idx0 << "/" << el.idx1 << "/" << el.idx2 << ", ";
+        //std::cout << std::endl;
+
+        // Skim triplet_list to only keep the ones with |sum(charges)| == 1
+        for (auto triplet : triplet_list)
+            if ( std::abs(L1Puppi_charge[triplet.idx0] + L1Puppi_charge[triplet.idx1] + L1Puppi_charge[triplet.idx2]) == 1 )
+                final_triplets.push_back(triplet);
+
+        // If no good triplet survives the skimming, return a fake one
+        if (final_triplets.size() < 1)
+        {
+            final_triplets.push_back(make_triplet_idx(-1, -1, -1));
+        }
+
+    }
+
+    //std::cout << " final_triplets: ";
+    //for (auto el: final_triplets) std::cout << el.idx0 << "/" << el.idx1 << "/" << el.idx2 << ", ";
+    //std::cout << std::endl;
+
+    return final_triplets;
 }
 
 
