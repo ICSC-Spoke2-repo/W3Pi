@@ -3,6 +3,7 @@ import pdb
 import pandas as pd
 import numpy as np
 import math
+import ROOT
 
 # Define events to be used for training/validation/test (i.e. fill appropriate columns)
 def train_test_valid_split(dframe, train_size, valid_size):
@@ -42,9 +43,66 @@ def merge_numpyzed_dictionaries (sframe_numpyzed, bframe_numpyzed):
   return ret
 
 
+# Recast variable type for pandas and NN compression
 def recast_PandasDF (oframe, OUT_BRANCHES):
 
   for k, (_, t) in OUT_BRANCHES.items():
     oframe[k] = oframe[k].astype(t) if not t is None else oframe[k]
 
   return oframe
+
+
+# Get list of numpy arrays with inputs for the NN for each triplet in the event
+def get_triplets_inputs(event):
+    outs = []
+    for triplet in event.triplet_idxs:
+        i0 = triplet.idx0
+        i1 = triplet.idx1
+        i2 = triplet.idx2
+        tlv0 = ROOT.Math.PtEtaPhiMVector(event.L1Puppi_pt[i0], event.L1Puppi_eta[i0], event.L1Puppi_phi[i0], event.L1Puppi_mass[i0])
+        tlv1 = ROOT.Math.PtEtaPhiMVector(event.L1Puppi_pt[i1], event.L1Puppi_eta[i1], event.L1Puppi_phi[i1], event.L1Puppi_mass[i1])
+        tlv2 = ROOT.Math.PtEtaPhiMVector(event.L1Puppi_pt[i2], event.L1Puppi_eta[i2], event.L1Puppi_phi[i2], event.L1Puppi_mass[i2])
+
+        nn_inputs = np.array([
+            event.L1Puppi_pt[i0],
+            event.L1Puppi_pt[i1],
+            event.L1Puppi_pt[i2],
+            event.L1Puppi_eta[i0],
+            event.L1Puppi_eta[i1],
+            event.L1Puppi_eta[i2],
+            event.L1Puppi_phi[i0],
+            event.L1Puppi_phi[i1],
+            event.L1Puppi_phi[i2],
+            event.L1Puppi_mass[i0],
+            event.L1Puppi_mass[i1],
+            event.L1Puppi_mass[i2],
+            event.L1Puppi_vz[i0],
+            event.L1Puppi_vz[i1],
+            event.L1Puppi_vz[i2],
+            event.L1Puppi_charge[i0],
+            event.L1Puppi_charge[i1],
+            event.L1Puppi_charge[i2],
+            event.L1Puppi_pdgId[i0],
+            event.L1Puppi_pdgId[i1],
+            event.L1Puppi_pdgId[i2],
+            event.L1Puppi_eta[i0] - event.L1Puppi_eta[i1],
+            event.L1Puppi_eta[i0] - event.L1Puppi_eta[i2],
+            event.L1Puppi_eta[i1] - event.L1Puppi_eta[i2],
+            event.L1Puppi_phi[i0] - event.L1Puppi_phi[i1],
+            event.L1Puppi_phi[i0] - event.L1Puppi_phi[i2],
+            event.L1Puppi_phi[i1] - event.L1Puppi_phi[i2],
+            ROOT.Math.VectorUtil.DeltaR(tlv0, tlv1),
+            ROOT.Math.VectorUtil.DeltaR(tlv0, tlv2),
+            ROOT.Math.VectorUtil.DeltaR(tlv1, tlv2),
+            (tlv0 + tlv1).M(),
+            (tlv0 + tlv2).M(),
+            (tlv1 + tlv2).M(),
+            (tlv0+tlv1+tlv2).M(),
+            (tlv0+tlv1+tlv2).Pt(),
+            max(ROOT.Math.VectorUtil.DeltaR(tlv0, tlv1), max(ROOT.Math.VectorUtil.DeltaR(tlv0, tlv2), ROOT.Math.VectorUtil.DeltaR(tlv1, tlv2))),
+            min(ROOT.Math.VectorUtil.DeltaR(tlv0, tlv1), min(ROOT.Math.VectorUtil.DeltaR(tlv0, tlv2), ROOT.Math.VectorUtil.DeltaR(tlv1, tlv2)))
+        ])
+
+        outs.append(nn_inputs)
+
+    return outs

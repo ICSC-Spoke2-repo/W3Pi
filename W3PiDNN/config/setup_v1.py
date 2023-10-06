@@ -123,7 +123,7 @@ SETUP = {
   },
   'FIT':      {
     'batch_size'          : 500 ,
-    'epochs'              : 5   , #20
+    'epochs'              : 20  ,
     'shuffle'             : True,
     'verbose'             : True,
     'use_multiprocessing' : True,

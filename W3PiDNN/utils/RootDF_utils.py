@@ -33,14 +33,12 @@ def make_numpy_from_RootDF (sframe, bframe, OUT_BRANCHES):
 
     return signal_numpyzed, background_numpyzed
 
+
 # ---------------------------------------------------------------------------------------------------
 ### Signal Methods ###
 # ---------------------------------------------------------------------------------------------------
 
 # Prepare signal df starting from the original DF
-# - filter on gen matched events only
-# - add reco_idxs of the gen matched triplet
-# - add new features for NN
 def prepare_signal_df (df, OUT_BRANCHES):
 
     # Add gen_matched information and filter over it
@@ -52,7 +50,7 @@ def prepare_signal_df (df, OUT_BRANCHES):
     df = add_candidate_matched_idxs(df)
 
     # Seelct the final triplet candidate idxs (same selections for signal and background)
-    df = add_final_triplet_idxs(df)
+    df = add_final_triplet_idxs(df, from_pivot = True)
 
     # Filter only the events with a good triplet found
     df = df.Filter('reco_idxs.size() == 3')
@@ -120,11 +118,14 @@ def prepare_background_df (df, OUT_BRANCHES, max_entries):
 # NOTE: based on random selection --> i.e. works well when max_entries > 1000
 def add_evt_to_keep_flag (df, max_entries):
 
-    # Compute total number of entries and the fraction to be kept
-    tot_entries = df.Count().GetValue()
-    frac_to_keep = 1. * max_entries / tot_entries
-
-    df = df.Define('evt_to_keep', 'add_evt_to_keep_flag({})'.format(str(frac_to_keep)))
+    if max_entries < 0:
+        # Keep all entries
+        df = df.Define('evt_to_keep', 'true')
+    else:
+        # Compute total number of entries and the fraction to be kept
+        tot_entries = df.Count().GetValue()
+        frac_to_keep = 1. * max_entries / tot_entries
+        df = df.Define('evt_to_keep', 'add_evt_to_keep_flag({})'.format(str(frac_to_keep)))
 
     return df
 
@@ -141,6 +142,26 @@ def add_candidate_reco_idxs (df):
 
 
 # ---------------------------------------------------------------------------------------------------
+### Inference Methods ###
+# ---------------------------------------------------------------------------------------------------
+
+# Prepare inference df
+def prepare_inference_df (df, OUT_BRANCHES):
+
+    # Get list of candidate idxs
+    # (in case of inference it's the full list of idxs of reco particles)
+    df = add_candidate_reco_idxs(df)
+
+    # Add random triplet idxs (always using pivot)
+    df = add_all_triplet_idxs(df)
+
+    # Filter only the events with a good triplet found
+    df = df.Filter('triplet_idxs.size() > 0 && triplet_idxs[0].idx0 >= 0')
+
+    return df
+
+
+# ---------------------------------------------------------------------------------------------------
 ### Common Methods ###
 # ---------------------------------------------------------------------------------------------------
 
@@ -150,6 +171,12 @@ def add_final_triplet_idxs (df, from_pivot = False):
         df = df.Define('reco_idxs', 'add_final_triplet_idxs_from_pivot(candidate_idxs, L1Puppi_pdgId, L1Puppi_charge, L1Puppi_pt)')
     else:
         df = df.Define('reco_idxs', 'add_final_triplet_idxs(candidate_idxs, L1Puppi_pdgId, L1Puppi_charge)')
+    return df
+
+
+# Add list of all triplet idxs selected - same selections for signal and background
+def add_all_triplet_idxs (df, from_pivot = False):
+    df = df.Define('triplet_idxs', 'add_all_triplet_idxs_from_pivot(candidate_idxs, L1Puppi_pdgId, L1Puppi_charge, L1Puppi_pt)')
     return df
 
 
@@ -188,7 +215,7 @@ def set_target_value (df, sample_type):
 # ---------------------------------------------------------------------------------------------------
 
 # Print current RDataFrame - works only with MultiThreading disabled
-def print_dataframe (df, columns):
+def print_dataframe (df, columns, nrows = 10):
   """
   Inputs:
    - (filtered) RDataFrame
@@ -200,5 +227,5 @@ def print_dataframe (df, columns):
   print('Printing the current RDF')
 
   # Printout
-  d2 = df.Display(columns)
+  d2 = df.Display(columns, nrows)
   print(d2.AsString())

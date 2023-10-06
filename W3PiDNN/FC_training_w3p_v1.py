@@ -1,4 +1,4 @@
-# Geneal imports
+# General imports
 import os
 import sys ; sys.path.append(os.getcwd())
 import argparse
@@ -36,20 +36,20 @@ args = parser.parse_args()
 '''
 time python3 FC_training_w3p_v1.py \
   --input  hdf_files/hdf_nL1Puppi_3_v4_pivot_shuffle_large.h5 \
-  --output trainings/w3pDNN_v4 \
+  --output trainings/w3pDNN_v1 \
   --setup  config/setup_v1.py \
   --neurons 37 35 30 25 30 35 \
-  --cpu
+  --cpu \
+  --feat_imp
 
 time python3 FC_training_w3p_v1.py \
-  --input  hdf_files/hdf_nL1Puppi_3_v4_pivot_shuffle_large.h5 \
-  --output trainings/w3pDNN_v5_r2 \
+  --input  hdf_files/hdf_nL1Puppi_3_pivot_pt_ordered_large.h5 \
+  --output trainings/w3pDNN_v2 \
   --setup  config/setup_v1.py \
-  --neurons 37 35 35 \
+  --neurons 37 35 30 25 30 35 \
   --cpu \
-  --fast \
-  --scoring r2 \
   --feat_imp
+
 '''
 
 # Assert if output folder already exists
@@ -129,5 +129,6 @@ if args.feat_imp:
   plt.bar(model.FEATURES, importance)
   plt.xticks(rotation=90)
   plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.25)
-  plt.savefig(model.log_dir+'/feature_importance.png')
+  plt.savefig(args.output+'/feature_importance_'+args.scoring+'.png')
+  plt.close()
 
