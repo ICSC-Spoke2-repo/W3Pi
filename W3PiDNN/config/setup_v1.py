@@ -62,6 +62,10 @@ OUT_BRANCHES = {
   'pi1_pdgId'      : ('L1Puppi_pdgId[reco_idxs[1]]'  , 'int32'),
   'pi2_pdgId'      : ('L1Puppi_pdgId[reco_idxs[2]]'  , 'int32'),
 
+  'pi0_iso'        : ('L1Puppi_iso[reco_idxs[0]]'   , 'float32'),
+  'pi1_iso'        : ('L1Puppi_iso[reco_idxs[1]]'   , 'float32'),
+  'pi2_iso'        : ('L1Puppi_iso[reco_idxs[2]]'   , 'float32'),
+
   # Pion pair variables (dR, dEta, dPhi)
   'dEta_01'        : ('L1Puppi_eta[reco_idxs[0]] - L1Puppi_eta[reco_idxs[1]]' , 'float32'),
   'dEta_02'        : ('L1Puppi_eta[reco_idxs[0]] - L1Puppi_eta[reco_idxs[2]]' , 'float32'),
@@ -79,11 +83,20 @@ OUT_BRANCHES = {
   'm_02'           : ('(tlv0 + tlv2).M()'                                     , 'float32'),
   'm_12'           : ('(tlv1 + tlv2).M()'                                     , 'float32'),
 
+  'pt_01'           : ('(tlv0 + tlv1).Pt()'                                   , 'float32'),
+  'pt_02'           : ('(tlv0 + tlv2).Pt()'                                   , 'float32'),
+  'pt_12'           : ('(tlv1 + tlv2).Pt()'                                   , 'float32'),
+
+  'dVz_01'          : ('L1Puppi_vz[reco_idxs[0]] - L1Puppi_vz[reco_idxs[1]]' , 'float32'),
+  'dVz_02'          : ('L1Puppi_vz[reco_idxs[0]] - L1Puppi_vz[reco_idxs[2]]' , 'float32'),
+  'dVz_12'          : ('L1Puppi_vz[reco_idxs[1]] - L1Puppi_vz[reco_idxs[2]]' , 'float32'),
+
   # Pion triplet variables (triplet invariant mass)
   'triplet_mass'   : ('(tlv0+tlv1+tlv2).M()'                                  , 'float32'),
   'triplet_pt'     : ('(tlv0+tlv1+tlv2).Pt()'                                 , 'float32'),
   'triplet_maxdR'  : ('max(dR_01, max(dR_02, dR_12))'                         , 'float32'),
   'triplet_mindR'  : ('min(dR_01, min(dR_02, dR_12))'                         , 'float32'),
+  'triplet_maxdVz' : ('max(dVz_01, max(dVz_02, dVz_12))'                      , 'float32'),
 
   # NN Trining variables
   'is_train'       : ('false' , 'bool'),
@@ -100,6 +113,23 @@ FEATURES = [
   b for b in OUT_BRANCHES.keys() if not b in [
     'is_train', 'is_valid', 'is_test', 'class',
     'run', 'lumi', 'event', 'bunchCrossing', 'nL1Puppi',
+    'triplet_mass', # triplet mass shouldn't be used in the training
+
+    #'pi0_eta', 'pi1_eta', 'pi2_eta', 'pi0_phi', 'pi1_phi', 'pi2_phi', # removed from v8 due to low importance
+    #'pi0_mass', 'pi1_mass', 'pi2_mass', 'pi0_vz', 'pi1_vz', 'pi2_vz',
+    #'pi0_charge', 'pi1_charge', 'pi2_charge',
+    #'dEta_01', 'dEta_02', 'dEta_12',
+
+    #'dPhi_01', 'dPhi_02', 'dPhi_12', 'pt_01',                         # removed from v9 due to low importance in v8
+
+    #'dVz_01', 'dVz_02', 'dVz_12', 'triplet_maxdVz'                    # added in v13
+
+    'pi0_eta', 'pi1_eta', 'pi2_eta', 'pi0_phi', 'pi1_phi', 'pi2_phi',  # removed in training v18
+    'pi0_mass', 'pi1_mass', 'pi2_mass', 'pi0_vz', 'pi1_vz', 'pi2_vz',
+    'pi0_charge', 'pi1_charge', 'pi2_charge',
+    'dEta_01', 'dEta_02', 'dEta_12', 'dPhi_01', 'dPhi_02', 'dPhi_12',
+    'triplet_mindR',
+
   ]
 ]
 
@@ -123,7 +153,7 @@ SETUP = {
   },
   'FIT':      {
     'batch_size'          : 500 ,
-    'epochs'              : 20  ,
+    'epochs'              : 100  ,
     'shuffle'             : True,
     'verbose'             : True,
     'use_multiprocessing' : True,

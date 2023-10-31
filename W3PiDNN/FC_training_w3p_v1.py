@@ -50,6 +50,148 @@ time python3 FC_training_w3p_v1.py \
   --cpu \
   --feat_imp
 
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_4_pivot_pt_ordered_15_4_3_50_110.h5 \
+  --output trainings/w3pDNN_v3 \
+  --setup  config/setup_v1.py \
+  --neurons 36 36 36 30 25 30 35 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_4_pivot_pt_ordered_15_4_3_60_100.h5 \
+  --output trainings/w3pDNN_v4 \
+  --setup  config/setup_v1.py \
+  --neurons 36 36 36 30 25 30 35 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_4_pivot_pt_ordered_15_5_5_60_100.h5 \
+  --output trainings/w3pDNN_v5 \
+  --setup  config/setup_v1.py \
+  --neurons 36 36 36 30 25 30 35 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_5_pivot_pt_ordered_15_4_3_50_110.h5 \
+  --output trainings/w3pDNN_v6 \
+  --setup  config/setup_v1.py \
+  --neurons 36 36 36 30 25 30 35 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v7 \
+  --setup  config/setup_v1.py \
+  --neurons 36 36 36 30 25 30 35 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v8 \
+  --setup  config/setup_v1.py \
+  --neurons 36 36 36 30 25 30 35 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v9 \
+  --setup  config/setup_v1.py \
+  --neurons 36 36 36 30 25 30 35 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v10 \
+  --setup  config/setup_v1.py \
+  --neurons 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v11 \
+  --setup  config/setup_v1.py \
+  --neurons 30 30 30 25 25 25 20 20 25 25 25 30 30 30 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_7_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v11_v2 \
+  --setup  config/setup_v1.py \
+  --neurons 30 30 30 25 25 25 20 20 25 25 25 30 30 30 \
+  --feat_imp
+
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v12 \
+  --setup  config/setup_v1.py \
+  --neurons 20 20 17 15 13 15 17 20 20 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_7_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v13 \
+  --setup  config/setup_v1.py \
+  --neurons 30 30 30 25 25 25 20 20 25 25 25 30 30 30 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_8_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v14 \
+  --setup  config/setup_v1.py \
+  --neurons 30 30 30 25 25 25 20 20 25 25 25 30 30 30 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_9_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v15 \
+  --setup  config/setup_v1.py \
+  --neurons 30 30 30 25 25 25 20 20 25 25 25 30 30 30 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_9_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v16 \
+  --setup  config/setup_v1.py \
+  --neurons 30 30 30 25 25 25 20 20 25 25 25 30 30 30 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_9_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v17 \
+  --setup  config/setup_v1.py \
+  --neurons 50 50 50 40 40 40 30 25 30 40 40 40 50 50 50 \
+  --cpu \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_9_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --output trainings/w3pDNN_v18 \
+  --setup  config/setup_v1.py \
+  --neurons 35 35 35 30 30 25 25 20 25 25 30 30 35 35 35 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_10_pivot_pt_ordered_15_4_3_50_110_acceptance_iso.h5 \
+  --output trainings/w3pDNN_v19 \
+  --setup  config/setup_v1.py \
+  --neurons 35 35 35 30 30 25 25 20 25 25 30 30 35 35 35 \
+  --feat_imp
+
+time python3 FC_training_w3p_v1.py \
+  --input  hdf_files/hdf_nL1Puppi_11_pivot_pt_ordered_15_4_3_50_110_acceptance_iso.h5 \
+  --output trainings/w3pDNN_v20 \
+  --setup  config/setup_v1.py \
+  --neurons 35 35 35 30 30 25 25 20 25 25 30 30 35 35 35 \
+  --feat_imp
 '''
 
 # Assert if output folder already exists

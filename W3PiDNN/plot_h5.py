@@ -8,6 +8,15 @@ from config.setup_v1 import FEATURES
 # training version
 #version = 'nL1Puppi_3_v4_pivot_shuffle_large'
 version = 'nL1Puppi_3_pivot_pt_ordered_large'
+version = 'nL1Puppi_4_pivot_pt_ordered_15_4_3_50_110'
+version = 'nL1Puppi_4_pivot_pt_ordered_15_4_3_60_100'
+version = 'nL1Puppi_5_pivot_pt_ordered_15_4_3_50_110'                 # with iso variables
+version = 'nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance'      # add acceptance eta cuts
+version = 'nL1Puppi_7_pivot_pt_ordered_15_4_3_50_110_acceptance'      # add vz composite vars and BIG bkg sample
+version = 'nL1Puppi_8_pivot_pt_ordered_15_4_3_50_110_acceptance'      # add vz composite vars and back to small bkg sample
+version = 'nL1Puppi_9_pivot_pt_ordered_15_4_3_50_110_acceptance'      # add to background the signal-non-matched events
+version = 'nL1Puppi_10_pivot_pt_ordered_15_4_3_50_110_acceptance_iso' # same as 9 but add iso < 0.6 to selections
+version = 'nL1Puppi_11_pivot_pt_ordered_15_4_3_50_110_acceptance_iso' # same as 10 but a bit larger number of bkg events (~ number of signal)
 
 # Make output
 if not os.path.isdir('hdf_files/plots_'+version):
@@ -41,9 +50,9 @@ n_b_test  = b_data[data['is_test'] == 1]['run'].size
 n_b_valid = b_data[data['is_valid']  == 1]['run'].size
 
 print('- Entries -')
-print('total  : {:5}', data['run'].size)
-print('total s: {:5}', s_data['run'].size)
-print('total b: {:5}', b_data['run'].size)
+print('total  : {:5}'.format(data  ['run'].size))
+print('total s: {:5}'.format(s_data['run'].size))
+print('total b: {:5}'.format(b_data['run'].size))
 
 print('- Percentages of train/test/validation -')
 print('Overall:')
@@ -63,8 +72,8 @@ print('  validation : {:.4} %'.format(100. * n_b_valid / n_b) )
 def make_plot (variable):
     fig = plt.figure(figsize=(10, 7), dpi=100) 
     # Plot histograms
-    data[data['class'] == 1][variable].hist(alpha=0.6, grid=False, bins=30, label='signal'    , color='#3371ff')
-    data[data['class'] == 0][variable].hist(alpha=0.6, grid=False, bins=30, label='background', color='#ffb833')
+    data[data['class'] == 1][variable].hist(alpha=0.6, grid=False, bins=30, density=True, label='signal'    , color='#3371ff')
+    data[data['class'] == 0][variable].hist(alpha=0.6, grid=False, bins=30, density=True, label='background', color='#ffb833')
 
     # Customize plot
     plt.legend()
