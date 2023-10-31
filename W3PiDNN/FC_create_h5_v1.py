@@ -38,10 +38,67 @@ SIGNALS
   /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1_more.root  --> missing bunchCrossing branch + contain additional L1PF branches
   /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root       --> missing bunchCrossing branch + contain additional L1PF branches
 
-time python3 create_h5.py \
+time python3 FC_create_h5_v1.py \
   --inputS /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_WTo3Pion_PU200.125X_v0.root /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root \
   --inputB /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root \
-  --output hdf_files/hdf_nL1Puppi_3_pivot_pt_ordered_large.h5 \
+  --output hdf_files/hdf_nL1Puppi_5_pivot_pt_ordered_15_4_3_50_110.h5 \
+  --threads 6 \
+  --features config/setup_v1.py
+
+time python3 FC_create_h5_v1.py \
+  --inputS /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_WTo3Pion_PU200.125X_v0.root /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root \
+  --inputB /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root \
+  --output hdf_files/hdf_nL1Puppi_6_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --train-size 0.7 \
+  --valid-size 0.2 \
+  --threads 6 \
+  --features config/setup_v1.py
+
+time python3 FC_create_h5_v1.py \
+  --inputS /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_WTo3Pion_PU200.125X_v0.root /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root \
+  --inputB /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_big_PU200.125X_v0.0.root \
+  --output hdf_files/hdf_nL1Puppi_7_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --train-size 0.7 \
+  --valid-size 0.2 \
+  --threads 6 \
+  --features config/setup_v1.py
+
+time python3 FC_create_h5_v1.py \
+  --inputS /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_WTo3Pion_PU200.125X_v0.root /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root \
+  --inputB /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root \
+  --output hdf_files/hdf_nL1Puppi_8_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --train-size 0.7 \
+  --valid-size 0.2 \
+  --threads 6 \
+  --features config/setup_v1.py
+
+/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_TTbar_PU200.v1.root
+time python3 FC_create_h5_v1.py \
+  --inputS /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_WTo3Pion_PU200.125X_v0.root /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root \
+  --inputB /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root  \
+  --output hdf_files/hdf_nL1Puppi_9_pivot_pt_ordered_15_4_3_50_110_acceptance.h5 \
+  --train-size 0.7 \
+  --valid-size 0.2 \
+  --threads 6 \
+  --features config/setup_v1.py
+
+/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_TTbar_PU200.v1.root
+time python3 FC_create_h5_v1.py \
+  --inputS /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_WTo3Pion_PU200.125X_v0.root /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root \
+  --inputB /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root  \
+  --output hdf_files/hdf_nL1Puppi_10_pivot_pt_ordered_15_4_3_50_110_acceptance_iso.h5 \
+  --train-size 0.7 \
+  --valid-size 0.2 \
+  --threads 6 \
+  --features config/setup_v1.py
+
+/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_TTbar_PU200.v1.root
+time python3 FC_create_h5_v1.py \
+  --inputS /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_WTo3Pion_PU200.125X_v0.root /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root \
+  --inputB /gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_big_PU200.125X_v0.0.root  \
+  --output hdf_files/hdf_nL1Puppi_11_pivot_pt_ordered_15_4_3_50_110_acceptance_iso.h5 \
+  --train-size 0.7 \
+  --valid-size 0.2 \
   --threads 6 \
   --features config/setup_v1.py
 '''
@@ -82,7 +139,7 @@ bframe = bframe.Filter(baselineB)
 # - process the RDFs to add the correct branches (OUT_BRANCHES)
 # - force B to have same num of events of S
 # - returns 2 "numpyzed" DFs, ready to be merged and passed to Pandas
-sframe_numpyzed, bframe_numpyzed = make_numpy_from_RootDF(sframe, bframe, OUT_BRANCHES)
+sframe_numpyzed, bframe_numpyzed = make_numpy_from_RootDF(sframe, bframe, OUT_BRANCHES, addSignalNonMatched=True)
 
 print(' > sframe_numpyzed size:', sframe_numpyzed['event'].size)
 print(' > bframe_numpyzed size:', bframe_numpyzed['event'].size)
