@@ -2,3 +2,4 @@ W3PiDNN/*/__pycache__
 W3PiDNN/trainings/
 W3PiDNN/hdf_files/predicted
 W3PiDNN/hdf_files/plots_*
+*.png
