@@ -17,31 +17,31 @@ from config.setup_v1 import *
 from utils.RootDF_utils import *
 from utils.PandasDF_utils import *
 
-# ----- C++ snippets -----
-# Gen-matching snippets
-add_reco_matched_idxs = '''
-int idx0 = std::distance(std::begin(L1Puppi_GenPiIdx), std::find(L1Puppi_GenPiIdx.begin(), L1Puppi_GenPiIdx.end(), 0));
-int idx1 = std::distance(std::begin(L1Puppi_GenPiIdx), std::find(L1Puppi_GenPiIdx.begin(), L1Puppi_GenPiIdx.end(), 1));
-int idx2 = std::distance(std::begin(L1Puppi_GenPiIdx), std::find(L1Puppi_GenPiIdx.begin(), L1Puppi_GenPiIdx.end(), 2));
-std::vector<int> reco_matched_idxs {idx0, idx1, idx2};
-return reco_matched_idxs;
-'''
+# Parse arguments
+parser = argparse.ArgumentParser('Simple Script for the w3pDNN Evaluation.\n\
+Pass different arguments in the form --some-setup arg1='"string_val"' args2=float_val (note the multiple quotes for strings)'
+)
+parser.add_argument('-i', '--input', required=True,          help='Input training directory, e.g. trainings/w3pDNN_v1'  )
+parser.add_argument('-n', '--maxN' , default=-1   , type=int, help='Max entries on which running the inference'  )
 
-add_genmatched = '''
-bool found0 = (std::find(L1Puppi_GenPiIdx.begin(), L1Puppi_GenPiIdx.end(), 0) != L1Puppi_GenPiIdx.end());
-bool found1 = (std::find(L1Puppi_GenPiIdx.begin(), L1Puppi_GenPiIdx.end(), 1) != L1Puppi_GenPiIdx.end());
-bool found2 = (std::find(L1Puppi_GenPiIdx.begin(), L1Puppi_GenPiIdx.end(), 2) != L1Puppi_GenPiIdx.end());
-if (found0 && found1 && found2)
-    return true;
-else
-    return false;
+args = parser.parse_args()
+
+# Example commands
+'''
+time python3 FC_evaluate_w3p_v1_background.py \
+  --input trainings/w3pDNN_v20 \
+  --maxN 100000
+
+time python3 FC_evaluate_w3p_v1_background.py \
+  --input prunings/w3pDNN_v20_p1 \
+  --maxN 100000
 '''
 
 start_time = time.time()
 
 # ----- Load trained model -----
 # Load model
-model_name = 'trainings/w3pDNN_v2'
+model_name = args.input
 my_model = tf.keras.models.load_model(model_name)
 
 # Print a summary of the loaded model
@@ -50,8 +50,7 @@ model_time = time.time()
 
 # ----- Evaluate on a sample -----
 # Read input data from ROOT file
-infile = '/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1_more.root'
-#infile = '/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/v1/l1Nano_WTo3Pion_PU200.v1.root'
+infile = '/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root'
 
 print('Evaluating model {} on file: {}'.format(model_name, infile))
 
@@ -64,21 +63,16 @@ selection = 'nL1Puppi >= 3'
 #selection = '(event == 1 && (luminosityBlock == 1000 || luminosityBlock == 1013 || luminosityBlock == 1009 || luminosityBlock == 1012 || luminosityBlock == 1002 || luminosityBlock == 1016 || luminosityBlock == 1023)) || (luminosityBlock == 1000 && event == 3)'
 frame = frame.Filter(selection, 'minimal selection')
 print('Selected entries:', frame.Count().GetValue())
-frame=frame.Range(500)
+if args.maxN > 0:
+    frame=frame.Range(args.maxN)
 print('Ranged entries  :', frame.Count().GetValue())
 
-# Add Gen-matching to RDF
-frame = frame.Define('reco_matched_idxs', add_reco_matched_idxs) \
-             .Define('genmatched', add_genmatched) 
-# FIXME just temporarily skim on genmatched events
-frame = frame.Filter('genmatched')
-print('Genmatched entries  :', frame.Count().GetValue())
 select_filter_time = time.time()
 
 # Prepare Root DF
 frame = prepare_inference_df(frame, OUT_BRANCHES)
 frame = frame.Define('myrow', 'rdfentry_')
-print('Prepared RDF')
+print('Prepared RDF entries:', frame.Count().GetValue())
 prepareRDF_time = time.time()
 
 # Transform in Pandas DF to run inference 
@@ -87,7 +81,7 @@ print('Numpyzed RDF')
 numpyze_time = time.time()
 
 pdframe = pd.DataFrame.from_dict(frame_numpyzed)
-print('Transformed into PandasDF')
+print('Transformed into PandasDF, size:', pdframe['run'].size)
 pandasDF_time = time.time()
 
 # Loop on each event to get NN scores for each triplet for each event
@@ -129,7 +123,7 @@ ROOT.gInterpreter.ProcessLine(scoremap_snippet)
 
 # Add scores to the RDF
 frame = frame.Define('triplet_scores', 'scoremap[myrow];')
-print('Added predictions to RDF')
+print('Added predictions to RDF, size:', frame.Count().GetValue())
 add_predictions_time = time.time()
 
 # add size of triplets
@@ -144,17 +138,12 @@ predicted_idxs = '''
 '''
 frame = frame.Define('predicted_idxs', predicted_idxs)
 
-# Check how many times the prediction is true (predicted idxs match the gen idxs)
-frame = frame.Define('predicted_true', 'std::is_permutation( predicted_idxs.begin(), predicted_idxs.end(), reco_matched_idxs.begin() )')
-print("predicted_true entries:", frame.Filter('predicted_true').Count().GetValue())
-predicted_true_time = time.time()
-
 # ----- Save the RDF to HDF with predictions added -----
 np_to_save =  frame.AsNumpy()
 oframe = pd.DataFrame.from_dict(np_to_save)
-oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_small.h5', key='df')
+oframe = oframe.drop(columns=['triplet_idxs'])
+oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_small_background.h5', key='df')
 saveHDF_time = time.time()
-
 
 # ----- Print timing information -----
 timing_string = '''
@@ -166,7 +155,6 @@ timing_string = '''
  - Prepare PandasDF      : {:.4} seconds, from start: {:.4} seconds
  - Get predictions map   : {:.4} seconds, from start: {:.4} seconds
  - Add predictions       : {:.4} seconds, from start: {:.4} seconds
- - Predicted true        : {:.4} seconds, from start: {:.4} seconds
  - Save h5 file          : {:.4} seconds, from start: {:.4} seconds
 '''.format(
     (model_time - start_time)                   , (model_time - start_time),
@@ -176,17 +164,13 @@ timing_string = '''
     (pandasDF_time - numpyze_time)              , (pandasDF_time - start_time),
     (predictions_time - pandasDF_time)          , (predictions_time - start_time),
     (add_predictions_time - predictions_time)   , (add_predictions_time - start_time),
-    (predicted_true_time - add_predictions_time), (predicted_true_time - start_time),
-    (saveHDF_time - predicted_true_time)        , (saveHDF_time - start_time)
+    (saveHDF_time - add_predictions_time)       , (saveHDF_time - start_time),
 )
 print(timing_string)
 
-import pdb; pdb.set_trace()
+#import pdb; pdb.set_trace()
 
 '''
-
-cols = ('candidate_idxs','reco_matched_idxs', 'genmatched', 'triplet_idxs', 'triplet_scores', 'triplets_size', 'highest_score_idx', 'highest_score', 'predicted_idxs')
-print_dataframe(frame, cols)
 
 '''
 
