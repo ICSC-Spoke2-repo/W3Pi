@@ -79,9 +79,9 @@ select_filter_time = time.time()
 frame = add_gen_acceptance(frame)
 
 # Prepare Root DF
-frame = prepare_inference_df(frame, OUT_BRANCHES)
+frame = prepare_inference_df(frame)
 frame = frame.Define('myrow', 'rdfentry_')
-print('Prepared RDF')
+print('Prepared RDF entries:', frame.Count().GetValue())
 prepareRDF_time = time.time()
 
 # Transform in Pandas DF to run inference 
@@ -156,7 +156,8 @@ predicted_true_time = time.time()
 np_to_save =  frame.AsNumpy()
 oframe = pd.DataFrame.from_dict(np_to_save)
 oframe = oframe.drop(columns=['triplet_idxs'])
-oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_small.h5', key='df')
+#oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_small.h5', key='df')
+oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_big.h5', key='df')
 saveHDF_time = time.time()
 
 # ----- Print timing information -----

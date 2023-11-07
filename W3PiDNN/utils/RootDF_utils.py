@@ -87,7 +87,7 @@ def prepare_training_df (df, OUT_BRANCHES, isSignal=False):
     # - Non-signal: full list of idxs of reco particles
     df = add_candidate_idxs(df, isSignal)
 
-    # Seelct the final triplet candidate idxs
+    # Select the final triplet candidate idxs
     df = add_final_triplet_idxs(df, from_pivot = True)
 
     # Filter only the events with a good triplet found
@@ -203,7 +203,7 @@ def add_evt_to_keep_flag (df, max_entries):
 ### Inference Methods ###
 # ---------------------------------------------------------------------------------------------------
 # Prepare inference df
-def prepare_inference_df (df, OUT_BRANCHES):
+def prepare_inference_df (df):
 
     # Add isolation of all L1Puppi objects immediately so it can be used for the selections
     df = add_isolation(df)
@@ -212,10 +212,33 @@ def prepare_inference_df (df, OUT_BRANCHES):
     # (in case of inference it's the full list of idxs of reco particles)
     df = add_candidate_idxs(df, isSignal=False)
 
-    # Add random triplet idxs (always using pivot)
+    # Add all triplet idxs (always using pivot)
     df = add_all_triplet_idxs(df)
 
     # Filter only the events with a good triplet found
+    df = df.Filter('triplet_idxs.size() > 0 && triplet_idxs[0].idx0 >= 0')
+
+    return df
+
+# Prepare df with exact selections used by Pietro
+#  - pdgId 211 || 11
+#  - pT 18, 15, 12
+#  - sum charge = 1
+#  - dR > 0.5 between pions
+#  - 60 < m < 100
+#  - iso < 0.45
+def prepare_Pietro_df (df):
+
+    # Add isolation of all L1Puppi objects immediately so it can be used for the selections
+    df = add_isolation(df)
+
+    # Get list of candidate idxs
+    df = add_candidate_idxs(df, isSignal=False)
+
+    # Add random triplet idxs (always using pivot)
+    df = add_pietro_triplet_idxs(df)
+
+    # Filter only the events with at least a good triplet found
     df = df.Filter('triplet_idxs.size() > 0 && triplet_idxs[0].idx0 >= 0')
 
     return df
@@ -233,6 +256,17 @@ def add_all_triplet_idxs (df, from_pivot = False):
     df = df.Define('triplet_idxs', 'add_all_triplet_idxs_from_pivot(candidate_idxs, L1Puppi_pdgId, L1Puppi_charge, L1Puppi_pt, L1Puppi_eta, L1Puppi_phi, L1Puppi_mass, L1Puppi_iso)')
     return df
 
+# --------------------------------
+# Add list of all triplet idxs selected - Pietro's selections
+def add_pietro_triplet_idxs (df, from_pivot = False):
+    df = df.Define('triplet_idxs', 'add_pietro_triplet_idxs_from_pivot(candidate_idxs, L1Puppi_pdgId, L1Puppi_charge, L1Puppi_pt, L1Puppi_eta, L1Puppi_phi, L1Puppi_mass, L1Puppi_iso)')
+    return df
+
+# --------------------------------
+# Add final triplet candidate as the one with highest (pT x mW)
+def add_pietro_final_triplet_idxs (df):
+    df = df.Define('selected_idxs', 'add_pietro_final_triplet_idxs(triplet_idxs, L1Puppi_pt, L1Puppi_eta, L1Puppi_phi, L1Puppi_mass)')
+    return df
 
 # ---------------------------------------------------------------------------------------------------
 ### General Methods ###

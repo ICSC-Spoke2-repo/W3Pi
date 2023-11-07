@@ -50,7 +50,8 @@ model_time = time.time()
 
 # ----- Evaluate on a sample -----
 # Read input data from ROOT file
-infile = '/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root'
+#infile = '/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_PU200.125X_v0.root'
+infile = '/gwteraz/users/brivio/l1scouting/w3pi/ntuples-Giovanni/125-v0/l1Nano_SingleNeutrino_big_PU200.125X_v0.0.root'
 
 print('Evaluating model {} on file: {}'.format(model_name, infile))
 
@@ -70,7 +71,7 @@ print('Ranged entries  :', frame.Count().GetValue())
 select_filter_time = time.time()
 
 # Prepare Root DF
-frame = prepare_inference_df(frame, OUT_BRANCHES)
+frame = prepare_inference_df(frame)
 frame = frame.Define('myrow', 'rdfentry_')
 print('Prepared RDF entries:', frame.Count().GetValue())
 prepareRDF_time = time.time()
@@ -142,7 +143,8 @@ frame = frame.Define('predicted_idxs', predicted_idxs)
 np_to_save =  frame.AsNumpy()
 oframe = pd.DataFrame.from_dict(np_to_save)
 oframe = oframe.drop(columns=['triplet_idxs'])
-oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_small_background.h5', key='df')
+#oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_small_background.h5', key='df')
+oframe.to_hdf('hdf_files/predicted/hdf_'+model_name.split('/')[1]+'_signalPU200_big_background.h5', key='df')
 saveHDF_time = time.time()
 
 # ----- Print timing information -----

@@ -1,6 +1,5 @@
 # References:
 # - https://www.tensorflow.org/model_optimization/guide/pruning/pruning_with_keras
-# - https://www.tensorflow.org/model_optimization/guide/pruning/pruning_with_sparsity_2_by_4
 
 # General imports
 import os
@@ -46,7 +45,7 @@ pruning_output = 'prunings/w3pDNN_v'+args.NNversion+args.NNlabel+'_p'+args.PrunV
 batch_size     = 500
 epochs         = 100
 
-# ----- Load test data -----
+# ----- Load data -----
 data = pd.read_hdf('hdf_files/'+args.input+'.h5')
 
 # Select 'is_test' events only
