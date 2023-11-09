@@ -18,6 +18,10 @@ using cRVecF = const ROOT::VecOps::RVec<Float_t>&;
 using cRVecI = const ROOT::VecOps::RVec<Int_t>&;
 using tlv = ROOT::Math::PtEtaPhiMVector;
 
+// -------------------------------------------------------------------------------------------
+// ------------------------------------ Utility Functions ------------------------------------
+// -------------------------------------------------------------------------------------------
+
 // ------------------------------------------------
 // Triplet defines
 struct triplet_idx {
@@ -30,7 +34,6 @@ triplet_idx make_triplet_idx(int i, int j, int k) {
     triplet_idx mytriplet = {i, j, k};
     return mytriplet;
 }
-
 
 // ------------------------------------------------
 // Check if event is gen-matched
@@ -46,7 +49,6 @@ bool add_genmatched (cRVecI L1Puppi_GenPiIdx)
         return false;
 }
 
-
 // ------------------------------------------------
 // Return the list of index of the gen-matched L1Puppi candidates (for Signal ntuples)
 std::vector<int> add_candidate_matched_idxs (cRVecI L1Puppi_GenPiIdx)
@@ -59,7 +61,6 @@ std::vector<int> add_candidate_matched_idxs (cRVecI L1Puppi_GenPiIdx)
 
     return reco_idxs;
 }
-
 
 // ------------------------------------------------
 // Check if event has at least 1 or 2 gen-matched pions
@@ -75,7 +76,6 @@ bool add_genmatched_1or2 (cRVecI L1Puppi_GenPiIdx)
         return false;
 }
 
-
 // ------------------------------------------------
 // Check if the pdgId is good (pdgId == +211 || -211 || 11 || -11) or not
 bool good_pdg_id (Int_t id)
@@ -84,6 +84,69 @@ bool good_pdg_id (Int_t id)
     return ret;
 }
 
+// ------------------------------------------------
+// Add flag which is True only for about "max_entries" random events
+bool add_evt_to_keep_flag(float frac_to_keep)
+{
+    TRandom3 rand(0);
+    float rand_n = rand.Uniform(0,1);
+    if (rand_n < frac_to_keep)
+        return true;
+    else
+        return false;
+}
+
+// ------------------------------------------------
+// Isolation methods
+// Get dR between two particles as implemented in ROOT
+float get_dR (float eta1, float phi1, float eta2, float phi2)
+{
+    float deta = eta2 - eta1;
+    float dphi = phi2 - phi1;
+    if ( dphi > M_PI )
+    {
+      dphi -= 2.0*M_PI;
+    }
+    else if ( dphi <= -M_PI )
+    {
+      dphi += 2.0*M_PI;
+    }
+    return std::sqrt(dphi*dphi + deta*deta);
+}
+
+// Add isolation defined without using TLVs
+std::vector<float> add_isolation(cRVecF L1Puppi_pt, cRVecF L1Puppi_eta, cRVecF L1Puppi_phi)
+{
+    // Declare output
+    std::vector<float> isolations;
+    //std::cout << "---- MyIso ---" << std::endl;
+    for (int i=0; i<L1Puppi_pt.size(); i++)
+    {
+        // Get sum pT for each particle
+        float sum_pt = 0.;
+        for (int j=0; j<L1Puppi_pt.size(); j++)
+        {
+            if (j == i)
+                continue;
+            else
+            {
+                float temp_dR = get_dR(L1Puppi_eta[i], L1Puppi_phi[i], L1Puppi_eta[j], L1Puppi_phi[j]);
+                if (temp_dR > 0.01 && temp_dR < 0.25)
+                    sum_pt += L1Puppi_pt[j];
+                else
+                    continue;
+            }
+        }
+        isolations.push_back( sum_pt/L1Puppi_pt[i] );
+    }
+
+    return isolations;
+}
+
+
+// --------------------------------------------------------------------------------------------
+// ------------------------------------ Selection/Triplets ------------------------------------
+// --------------------------------------------------------------------------------------------
 
 // ------------------------------------------------
 // Return the final indexs of triplet:
@@ -388,62 +451,129 @@ std::vector<triplet_idx> add_all_triplet_idxs_from_pivot (std::vector<int> candi
 
 
 // ------------------------------------------------
-// Add flag which is True only for about "max_entries" random events
-bool add_evt_to_keep_flag(float frac_to_keep)
+// Add all triplets with Pietro's selections
+// Prepare df with exact selections used by Pietro
+//  - pdgId 211 || 11         OK
+//  - pT 18, 15, 12           OK
+//  - sum charge = 1          OK
+//  - dR > 0.5 between pions
+//  - 60 < m < 100            OK
+//  - iso < 0.45              OK
+std::vector<triplet_idx> add_pietro_triplet_idxs_from_pivot (std::vector<int> candidate_idxs, cRVecI L1Puppi_pdgId, cRVecI L1Puppi_charge, cRVecF L1Puppi_pt, cRVecF L1Puppi_eta, cRVecF L1Puppi_phi, cRVecF L1Puppi_mass, cRVecF L1Puppi_iso)
 {
-    TRandom3 rand(0);
-    float rand_n = rand.Uniform(0,1);
-    if (rand_n < frac_to_keep)
-        return true;
-    else
-        return false;
-}
+    // Declare output vector
+    std::vector<triplet_idx> final_triplets;
 
+    // Make list of indexes filtered on good PDG ID and with charge +/-1
+    std::vector<int> good_indexs;
+    for (auto idx : candidate_idxs)
+        if (good_pdg_id(L1Puppi_pdgId[idx]))     // base selections
+                if (L1Puppi_iso[idx] <= 0.45)    // isolation cut
+                    good_indexs.push_back(idx);
 
-// ------------------------------------------------
-// Isolation methods
-// Get dR between two particles as implemented in ROOT
-float get_dR (float eta1, float phi1, float eta2, float phi2)
-{
-    float deta = eta2 - eta1;
-    float dphi = phi2 - phi1;
-    if ( dphi > M_PI )
+    if (good_indexs.size() < 3) /* No triplet possible - return a fake triplet */
     {
-      dphi -= 2.0*M_PI;
+        final_triplets.push_back(make_triplet_idx(-1, -1, -1));
     }
-    else if ( dphi <= -M_PI )
+    else /* Make and select all triplet with Pivot */
     {
-      dphi += 2.0*M_PI;
-    }
-    return std::sqrt(dphi*dphi + deta*deta);
-}
-
-// Add isolation defined without using TLVs
-std::vector<float> add_isolation(cRVecF L1Puppi_pt, cRVecF L1Puppi_eta, cRVecF L1Puppi_phi)
-{
-    // Declare output
-    std::vector<float> isolations;
-    //std::cout << "---- MyIso ---" << std::endl;
-    for (int i=0; i<L1Puppi_pt.size(); i++)
-    {
-        // Get sum pT for each particle
-        float sum_pt = 0.;
-        for (int j=0; j<L1Puppi_pt.size(); j++)
+        // Find pivot index
+        int pivot_idx = -1.;
+        float max_pt = 0.;
+        for (auto idx : good_indexs)
         {
-            if (j == i)
-                continue;
-            else
+            if (L1Puppi_pt[idx] > max_pt)
             {
-                float temp_dR = get_dR(L1Puppi_eta[i], L1Puppi_phi[i], L1Puppi_eta[j], L1Puppi_phi[j]);
-                if (temp_dR > 0.01 && temp_dR < 0.25)
-                    sum_pt += L1Puppi_pt[j];
-                else
-                    continue;
+                max_pt = L1Puppi_pt[idx];
+                pivot_idx = idx;
             }
         }
-        isolations.push_back( sum_pt/L1Puppi_pt[i] );
+
+        // Make list of triplets from good_indexs as: pivot_idx + doublet (ordered by pT)
+        std::vector<triplet_idx> triplet_list;
+        for (auto i = 0; i < good_indexs.size()-1; i++)
+            for (auto j = i+1; j < good_indexs.size(); j++)
+                if ( good_indexs[i] != pivot_idx && good_indexs[j] != pivot_idx)
+                {
+                    if ( L1Puppi_pt[good_indexs[i]] >= L1Puppi_pt[good_indexs[j]] )
+                    {
+                        triplet_list.push_back(make_triplet_idx(pivot_idx, good_indexs[i], good_indexs[j]));
+                    }
+                    else
+                    {
+                        triplet_list.push_back(make_triplet_idx(pivot_idx, good_indexs[j], good_indexs[i]));
+                    }
+                }
+
+        // Skim triplet_list to only keep the ones with:
+        for (auto triplet : triplet_list)
+            // |sum(charges)| == 1
+            if ( std::abs(L1Puppi_charge[triplet.idx0] + L1Puppi_charge[triplet.idx1] + L1Puppi_charge[triplet.idx2]) == 1 )
+                // pt selection (18, 15, 12)
+                if ( L1Puppi_pt[triplet.idx0] >= 18. && L1Puppi_pt[triplet.idx1] >= 15. && L1Puppi_pt[triplet.idx2] >= 12. )
+                {
+                    // dR > 0.5 between pions
+                    float temp_dR01 = get_dR(L1Puppi_eta[triplet.idx0], L1Puppi_phi[triplet.idx0], L1Puppi_eta[triplet.idx1], L1Puppi_phi[triplet.idx1]);
+                    float temp_dR02 = get_dR(L1Puppi_eta[triplet.idx0], L1Puppi_phi[triplet.idx0], L1Puppi_eta[triplet.idx2], L1Puppi_phi[triplet.idx2]);
+                    float temp_dR12 = get_dR(L1Puppi_eta[triplet.idx1], L1Puppi_phi[triplet.idx1], L1Puppi_eta[triplet.idx2], L1Puppi_phi[triplet.idx2]);
+                    if (temp_dR01 >= 0.5 && temp_dR02 >= 0.5 && temp_dR12 >= 0.5)
+                    {
+                        // Mass selection [60,100]
+                        tlv tlv0(L1Puppi_pt[triplet.idx0], L1Puppi_eta[triplet.idx0], L1Puppi_phi[triplet.idx0], L1Puppi_mass[triplet.idx0]);
+                        tlv tlv1(L1Puppi_pt[triplet.idx1], L1Puppi_eta[triplet.idx1], L1Puppi_phi[triplet.idx1], L1Puppi_mass[triplet.idx1]);
+                        tlv tlv2(L1Puppi_pt[triplet.idx2], L1Puppi_eta[triplet.idx2], L1Puppi_phi[triplet.idx2], L1Puppi_mass[triplet.idx2]);
+                        if ( (tlv0+tlv1+tlv2).M() >= 60. && (tlv0+tlv1+tlv2).M() <= 100. )
+                            final_triplets.push_back(triplet);
+                    }
+                }
+
+        // If no good triplet survives the skimming, return a fake one
+        if (final_triplets.size() < 1)
+        {
+            final_triplets.push_back(make_triplet_idx(-1, -1, -1));
+        }
+
     }
 
-    return isolations;
+    return final_triplets;
+}
+
+// ------------------------------------------------
+// Add final triplet candidate as the one with highest (pT x mW)
+std::vector<int> add_pietro_final_triplet_idxs(std::vector<triplet_idx> triplet_idxs, cRVecF L1Puppi_pt, cRVecF L1Puppi_eta, cRVecF L1Puppi_phi, cRVecF L1Puppi_mass)
+{
+    // Declare output vector
+    std::vector<int> final_idxs;
+
+    // Loop on triplets to select the final one
+    float best_pT_mW = -999.;
+    int best_index = -1.;
+    for (int i = 0; i < triplet_idxs.size(); i++)
+    {
+        // Get idxs and TLVs for each triplet
+        int idx0 = triplet_idxs[i].idx0;
+        int idx1 = triplet_idxs[i].idx1;
+        int idx2 = triplet_idxs[i].idx2;
+        tlv tlv0(L1Puppi_pt[idx0], L1Puppi_eta[idx0], L1Puppi_phi[idx0], L1Puppi_mass[idx0]);
+        tlv tlv1(L1Puppi_pt[idx1], L1Puppi_eta[idx1], L1Puppi_phi[idx1], L1Puppi_mass[idx1]);
+        tlv tlv2(L1Puppi_pt[idx2], L1Puppi_eta[idx2], L1Puppi_phi[idx2], L1Puppi_mass[idx2]);
+
+        // Compute pT x mW for each triplet
+        float temp_pT = (tlv0+tlv1+tlv2).Pt();
+        float temp_mW = (tlv0+tlv1+tlv2).M();
+
+        // Get the best triplet with highest (pT x mW)
+        if ( temp_pT * temp_mW >= best_pT_mW)
+        {
+            best_pT_mW = temp_pT * temp_mW;
+            best_index = i;
+        }
+    }
+
+    // Return the best triplet
+    final_idxs.push_back(triplet_idxs[best_index].idx0);
+    final_idxs.push_back(triplet_idxs[best_index].idx1);
+    final_idxs.push_back(triplet_idxs[best_index].idx2);
+    return final_idxs;
 }
 
