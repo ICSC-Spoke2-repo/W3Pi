@@ -65,7 +65,7 @@ int BestSeedReduceIdx(const Puppi x[width], const bool masked[width], const int 
     #pragma HLS array_partition variable=indexesreduced complete
 
     // Loop to compare elements in pairs
-    for(int i = 0; i < halfWidth; ++i) {
+    LOOP_BSRI: for(int i = 0; i < halfWidth; ++i) {
         #pragma HLS unroll
         bool first_best = BestSeedIdx2(x[i*2], masked[i*2], x[i*2+1], masked[i*2+1]);
         reduced[i] = first_best ? x[i*2] : x[i*2+1];
@@ -106,7 +106,7 @@ void filter_candidates(const Puppi input[NPUPPI_MAX], bool masked[NPUPPI_MAX])
     #pragma HLS pipeline II=1
 
     // Loop on candidates and apply selections
-    for (unsigned int i = 0; i < NPUPPI_MAX; i++)
+    LOOP_FC: for (unsigned int i = 0; i < NPUPPI_MAX; i++)
     {
         bool badID  = input[i].hwID <= 1 || input[i].hwID >= 6;
         bool badPt  = input[i].hwPt <= 3;
@@ -139,7 +139,9 @@ Puppi::pt_t get_iso(const Puppi input[NPUPPI_MAX], const bool masked[NPUPPI_MAX]
     #pragma HLS ARRAY_PARTITION variable=tosum complete
 
     // Loop on all particles to compute iso_sum
-    for (unsigned int i = 0; i < NPUPPI_MAX; ++i) {
+    LOOP_GI: for (unsigned int i = 0; i < NPUPPI_MAX; ++i) {
+        #pragma HLS UNROLL
+
         // Get dR2
         dr2_t dr2 = deltaR2(seed, input[i]);
 
@@ -170,7 +172,7 @@ void compute_isolation(const Puppi input[NPUPPI_MAX], const bool masked[NPUPPI_M
     //#pragma HLS pipeline II=9
 
     // Compute isolation for all (filtered) candidates
-    for (unsigned int j = 0; j < NPUPPI_MAX; ++j)
+    LOOP_CI: for (unsigned int j = 0; j < NPUPPI_MAX; ++j)
         output_absiso[j] = masked[j] ? Puppi::pt_t(0) : get_iso(input, masked, dr2_max, dr2_veto, input[j]);
 }
 
@@ -182,6 +184,7 @@ void compute_isolation(const Puppi input[NPUPPI_MAX], const bool masked[NPUPPI_M
 void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot)
 {
     #pragma HLS ARRAY_PARTITION variable=input complete
+    //#pragma HLS pipeline II=9
 
     // Define masked lists to filter candidates
     bool masked[NPUPPI_MAX];
@@ -195,7 +198,7 @@ void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot)
     #pragma HLS ARRAY_PARTITION variable=output_absiso complete
 
     // Clear isolation array
-    for (unsigned int j = 0; j < NPUPPI_MAX; ++j)
+    LOOP_EP1: for (unsigned int j = 0; j < NPUPPI_MAX; ++j)
         output_absiso[j] = 0;
 
     // Define min/max isolation cones
@@ -205,21 +208,22 @@ void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot)
     compute_isolation(input, masked, output_absiso, dr2_max, dr2_veto);
 
     // Update mask to consider only (iso_sum/pt) <= 0.6
-    for (unsigned int i = 0; i < NPUPPI_MAX; i++)
+    LOOP_EP2: for (unsigned int i = 0; i < NPUPPI_MAX; i++)
     {
+        #pragma HLS UNROLL
         masked[i] = masked[i] ? masked[i] : (output_absiso[i]/input[i].hwPt) > 0.6;
     }
 
     // Debug printout
-    for (unsigned int i = 0; i < 45; i++)
-        if (!masked[i])
-            std::cout << " -> Seed " << i << " pT: " << input[i].hwPt << " eta: " << input[i].hwEta*Puppi::ETAPHI_LSB << " pdgID: " << input[i].hwID
-                    << " charge: " << input[i].charge() << " IsoSum: " << output_absiso[i] << " Masked: " << masked[i] << std::endl;
+    //for (unsigned int i = 0; i < 45; i++)
+    //    if (!masked[i])
+    //        std::cout << " -> Seed " << i << " pT: " << input[i].hwPt << " eta: " << input[i].hwEta*Puppi::ETAPHI_LSB << " pdgID: " << input[i].hwID
+    //                << " charge: " << input[i].charge() << " IsoSum: " << output_absiso[i] << " Masked: " << masked[i] << std::endl;
 
     // Indexes array
     int my_indexes[NPUPPI_MAX];
-    #pragma HLS ARRAY_PARTITION variable=my_indexes complete
-    for (unsigned int i=0; i < NPUPPI_MAX; i++)
+    //#pragma HLS ARRAY_PARTITION variable=my_indexes complete
+    LOOP_EP3: for (unsigned int i=0; i < NPUPPI_MAX; i++)
         my_indexes[i] = i;
 
     // Find pivot (charged filtered candidate with highest pt)
@@ -227,6 +231,6 @@ void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot)
     pivot = input[pivot_idx];
 
     // Debug printout
-    std::cout << "---> Pivot     idx: " << pivot_idx << std::endl;
-    std::cout << "     Pivot     pT : " << pivot.hwPt << " eta: " << pivot.hwEta*Puppi::ETAPHI_LSB << " pdgID: " << pivot.hwID << std::endl;
+    //std::cout << "---> Pivot     idx: " << pivot_idx << std::endl;
+    //std::cout << "     Pivot     pT : " << pivot.hwPt << " eta: " << pivot.hwEta*Puppi::ETAPHI_LSB << " pdgID: " << pivot.hwID << std::endl;
 }
