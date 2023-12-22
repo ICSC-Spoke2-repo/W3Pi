@@ -10,13 +10,14 @@ int main(int argc, char **argv) {
     uint64_t header, data[NPUPPI_MAX];
 
     // Read input stream
-    //std::fstream in("Puppi.dump", std::ios::in | std::ios::binary);
+    //std::fstream in("Puppi_SingleNu.dump", std::ios::in | std::ios::binary);
+    //std::fstream in("Puppi_w3p_PU0.dump", std::ios::in | std::ios::binary);
     std::fstream in("Puppi_w3p_PU200.dump", std::ios::in | std::ios::binary);
 
     // Loop on input data in chunks
     for (int itest = 0, ntest = 10; itest < ntest && in.good(); ++itest) {
 
-	std::cout << "--------------------" << std::endl;
+       std::cout << "--------------------" << std::endl;
 
         // Read header
         in.read(reinterpret_cast<char *>(&header), sizeof(uint64_t));
@@ -104,21 +105,46 @@ int main(int argc, char **argv) {
 
         // FIRMWARE call
         Puppi pivot_hls;
-        event_preparator(puppi, pivot_hls);
+        Triplet triplets_hls[NTRIPLETS_MAX];
+        bool masked_triplets_hls[NTRIPLETS_MAX];
+        event_preparator(puppi, pivot_hls, triplets_hls, masked_triplets_hls);
 
         // REFERENCE call
         Puppi pivot_cpp;
-        event_preparator_ref(npuppi, puppi, pivot_cpp);
+        Triplet triplets_cpp[NTRIPLETS_MAX];
+        bool masked_triplets_cpp[NTRIPLETS_MAX];
+        event_preparator_ref(npuppi, puppi, pivot_cpp, triplets_cpp, masked_triplets_cpp);
+
+        // Debug printout
+        //std::cout << "---> Test Triplets HLS:" << std::endl;
+        //for (unsigned int i = 0; i < NTRIPLETS_MAX; i++)
+        //    if (!masked_triplets_hls[i])
+        //        std::cout << "     - triplet: " << triplets_hls[i].idx0 << "-" << triplets_hls[i].idx1 << "-" << triplets_hls[i].idx2 << std::endl;
+        //std::cout << "---> Test Triplets CPP:" << std::endl;
+        //for (unsigned int i = 0; i < NTRIPLETS_MAX; i++)
+        //    if (!masked_triplets_cpp[i])
+        //        std::cout << "     - triplet: " << triplets_cpp[i].idx0 << "-" << triplets_cpp[i].idx1 << "-" << triplets_cpp[i].idx2 << std::endl;
+
 
         // COMPARE
         bool ok = true;
-        ok = ok && (pivot_hls.pack() == pivot_cpp.pack());
+        // - Check Pivot
+        ok = ok && ( pivot_hls.pack() == pivot_cpp.pack() );
+        // - Check triplets
+        ok = ok && ( std::equal(std::begin(triplets_cpp), std::end(triplets_cpp), std::begin(triplets_cpp)) );
+        // - Check masked triplets
+        ok = ok && ( std::equal(std::begin(masked_triplets_hls), std::end(masked_triplets_hls), std::begin(masked_triplets_cpp)) );
+        // Final assert/printout
         if (!ok) {
             printf("Mismatch in test %u!\n", itest);
-            std::cout << " - Pivot HLS (pt/eta/phi/ID): " << pivot_hls.floatPt() << "/" << pivot_hls.floatEta() << "/" << pivot_hls.floatPhi()
-                                                       << "/" << pivot_hls.hwID.to_int() << std::endl;
-            std::cout << " - Pivot C++ (pt/eta/phi/ID): " << pivot_cpp.floatPt() << "/" << pivot_cpp.floatEta() << "/" << pivot_cpp.floatPhi()
-                                                       << "/" << pivot_cpp.hwID.to_int() << std::endl;
+            std::cout << "-- Pivot HLS (pt/eta/phi/pdgID): " << pivot_hls.floatPt() << "/" << pivot_hls.floatEta() << "/" << pivot_hls.floatPhi()
+                                                             << "/" << pivot_hls.hwID.to_int() << std::endl;
+            std::cout << "   HLS Triplets                : "; for (int i=0; i<NTRIPLETS_MAX; i++) std::cout << triplets_hls[i] << " ";        std::cout << std::endl;
+            std::cout << "   Masked HLS triplets         : "; for (int i=0; i<NTRIPLETS_MAX; i++) std::cout << masked_triplets_hls[i] << " "; std::cout << std::endl;
+            std::cout << "-- Pivot C++ (pt/eta/phi/pdgID): " << pivot_cpp.floatPt() << "/" << pivot_cpp.floatEta() << "/" << pivot_cpp.floatPhi()
+                                                             << "/" << pivot_cpp.hwID.to_int() << std::endl;
+            std::cout << "   CPP Triplets                : "; for (int i=0; i<NTRIPLETS_MAX; i++) std::cout << triplets_cpp[i] << " ";        std::cout << std::endl;
+            std::cout << "   Masked CPP triplets         : "; for (int i=0; i<NTRIPLETS_MAX; i++) std::cout << masked_triplets_cpp[i] << " "; std::cout << std::endl;
             return 1;
         } else {
             printf("Test %u passed\n", itest);

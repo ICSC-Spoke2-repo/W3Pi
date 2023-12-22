@@ -79,6 +79,17 @@ struct Triplet {
         idx1 = index1;
         idx2 = index2;
     }
+    // Overload equality comparison
+    bool operator==(const Triplet& a) const
+    {
+        return (idx0 == a.idx0 && idx1 == a.idx1 && idx2 == a.idx2);
+    }
+    // Overload ostream operator
+    friend std::ostream& operator << (std::ostream& os, const Triplet& a)
+    {
+        os << a.idx0 << "-" << a.idx1 << "-" << a.idx2;
+        return os;
+    }
 };
 
 #endif

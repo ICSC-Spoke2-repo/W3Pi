@@ -124,6 +124,32 @@ void filter_candidates(const Puppi input[NPUPPI_MAX], bool masked[NPUPPI_MAX])
     //for (unsigned int i = 0; i < 5; i++) std::cout << " - Filtered Candidate: " << i << " - masked ? " << masked[i] << std::endl;
 }
 
+// Filter triplets
+//  - sum of the charges = +/-1
+//  - pT >= 15/4/3 GeV
+//  - 50 <= mass_triplet <= 110
+void filter_triplets(const Puppi input[NPUPPI_MAX], const Triplet triplets[NTRIPLETS_MAX], bool masked_triplets[NTRIPLETS_MAX])
+{
+    #pragma HLS ARRAY_PARTITION variable=triplets complete
+    #pragma HLS ARRAY_PARTITION variable=masked_triplets complete
+    #pragma HLS pipeline II=1
+
+    LOOP_FT: for (unsigned int i = 0; i < NTRIPLETS_MAX; i++)
+    {
+        // Get indexes
+        unsigned int idx0 = triplets[i].idx0;
+        unsigned int idx1 = triplets[i].idx1;
+        unsigned int idx2 = triplets[i].idx2;
+
+        // Add selections on sum-charge, pt triplet, mass triplet
+        masked_triplets[i] = ( std::abs(input[idx0].charge()+input[idx1].charge()+input[idx2].charge()) != 1 ||
+                              (input[idx0].hwPt < 15) || (input[idx1].hwPt < 4) || (input[idx2].hwPt < 3)
+                              // FIXME: add mass selection here
+                            );
+    }
+}
+
+
 // For each filtered candidate compute iso_sum (sum of pts)
 Puppi::pt_t get_iso(const Puppi input[NPUPPI_MAX], const bool masked[NPUPPI_MAX], const dr2_t dr2_max, const dr2_t dr2_veto, const Puppi seed)
 {
@@ -181,9 +207,11 @@ void compute_isolation(const Puppi input[NPUPPI_MAX], const bool masked[NPUPPI_M
 //  - add isolation to filtered candidates
 //  - update mask to consider only (iso_sum/pt) <= 0.6
 //  - find pivot among them
-void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot)
+void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet triplets[NTRIPLETS_MAX], bool masked_triplets[NTRIPLETS_MAX])
 {
     #pragma HLS ARRAY_PARTITION variable=input complete
+    #pragma HLS ARRAY_PARTITION variable=triplets complete
+    #pragma HLS ARRAY_PARTITION variable=masked_triplets complete
     //#pragma HLS pipeline II=9
 
     // Define masked lists to filter candidates
@@ -233,4 +261,34 @@ void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot)
     // Debug printout
     //std::cout << "---> Pivot     idx: " << pivot_idx << std::endl;
     //std::cout << "     Pivot     pT : " << pivot.hwPt << " eta: " << pivot.hwEta*Puppi::ETAPHI_LSB << " pdgID: " << pivot.hwID << std::endl;
+
+    // Build all triplets (pT ordered) starting from pivot
+    int ntriplets = 0;
+    LOOP_EP4: for (unsigned int i = 0; i < NPUPPI_MAX-1; i++)
+        for (unsigned int j = i+1; j < NPUPPI_MAX; j++)
+        {
+            if (ntriplets == NTRIPLETS_MAX)
+                break;
+
+            if (i == pivot_idx || masked[i] || j == pivot_idx || masked[j])
+                continue;
+
+            triplets[ntriplets] = (input[i].hwPt >= input[j].hwPt) ? Triplet(pivot_idx,i,j) : Triplet(pivot_idx,j,i);
+            ntriplets++;
+        }
+
+    // Debug printout
+    //std::cout << "---> My Triplets:" << std::endl;
+    //for (unsigned int i = 0; i < ntriplets; i++)
+    //    std::cout << "     - triplet: " << triplets[i].idx0 << "-" << triplets[i].idx1 << "-" << triplets[i].idx2 << std::endl;
+
+    // Filter triplets
+    filter_triplets(input, triplets, masked_triplets);
+
+    // Debug printout
+    //std::cout << "     My Cleaned Triplets:" << std::endl;
+    //for (unsigned int i = 0; i < NTRIPLETS_MAX; i++)
+    //    if (!masked_triplets[i])
+    //        std::cout << "     - triplet: " << triplets[i].idx0 << "-" << triplets[i].idx1 << "-" << triplets[i].idx2 << std::endl;
+
 }
