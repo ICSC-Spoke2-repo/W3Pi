@@ -1,4 +1,4 @@
-#include "src/event_preparator.h"
+#include "src/event_processor.h"
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -107,13 +107,13 @@ int main(int argc, char **argv) {
         Puppi pivot_hls;
         Triplet triplets_hls[NTRIPLETS_MAX];
         bool masked_triplets_hls[NTRIPLETS_MAX];
-        event_preparator(puppi, pivot_hls, triplets_hls, masked_triplets_hls);
+        event_processor(puppi, pivot_hls, triplets_hls, masked_triplets_hls);
 
         // REFERENCE call
         Puppi pivot_cpp;
         Triplet triplets_cpp[NTRIPLETS_MAX];
         bool masked_triplets_cpp[NTRIPLETS_MAX];
-        event_preparator_ref(npuppi, puppi, pivot_cpp, triplets_cpp, masked_triplets_cpp);
+        event_processor_ref(npuppi, puppi, pivot_cpp, triplets_cpp, masked_triplets_cpp);
 
         // Debug printout
         //std::cout << "---> Test Triplets HLS:" << std::endl;

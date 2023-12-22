@@ -1,4 +1,4 @@
-#include "src/event_preparator.h"
+#include "src/event_processor.h"
 
 // Compute dR between two puppi objects
 inline dr2_t deltaR2(const Puppi & p1, const Puppi & p2) {
@@ -35,7 +35,7 @@ int find_pivot_idx_ref(unsigned int npuppi, const Puppi puppi[NPUPPI_MAX], const
 //  - add isolation to filtered candidates
 //  - update mask to consider only (iso_sum/pt) <= 0.6
 //  - find pivot among them
-void event_preparator_ref (unsigned int npuppi, const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet triplets[NTRIPLETS_MAX], bool masked_triplets[NTRIPLETS_MAX])
+void event_processor_ref (unsigned int npuppi, const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet triplets[NTRIPLETS_MAX], bool masked_triplets[NTRIPLETS_MAX])
 {
     // Define masked lists to filter candidates
     bool masked[NPUPPI_MAX];

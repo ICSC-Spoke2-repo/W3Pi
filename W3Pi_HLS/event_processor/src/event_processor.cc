@@ -1,4 +1,4 @@
-#include "event_preparator.h"
+#include "event_processor.h"
 #ifndef __SYNTHESIS__
 #include <cstdio>
 #endif
@@ -207,7 +207,7 @@ void compute_isolation(const Puppi input[NPUPPI_MAX], const bool masked[NPUPPI_M
 //  - add isolation to filtered candidates
 //  - update mask to consider only (iso_sum/pt) <= 0.6
 //  - find pivot among them
-void event_preparator (const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet triplets[NTRIPLETS_MAX], bool masked_triplets[NTRIPLETS_MAX])
+void event_processor (const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet triplets[NTRIPLETS_MAX], bool masked_triplets[NTRIPLETS_MAX])
 {
     #pragma HLS ARRAY_PARTITION variable=input complete
     #pragma HLS ARRAY_PARTITION variable=triplets complete

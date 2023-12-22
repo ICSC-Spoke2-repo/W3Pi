@@ -8,7 +8,7 @@ Build several "kernels" to perform _online_ the $W\to3\pi$ scouting analysis:
   * Read stream of input data
   * Do the unpacking
   * Initial selection (per event)
-* `event_preparator`:
+* `event_processor`:
   * Read Puppi candidates in one event
   * Filter them
   * Create all possible triplets starting from the pivot (highest pT)
@@ -20,7 +20,7 @@ Build several "kernels" to perform _online_ the $W\to3\pi$ scouting analysis:
 ## Implementation Status
 
 - [ ] `analysis main`
-- [x] `event_preparator` (not yet optimized, neither for latency, nor for resource consumption)
+- [x] `event_processor` (not yet optimized, neither for latency, nor for resource consumption)
 - [ ] `DNN inference`
 - [ ] linking of the kernels
 
@@ -31,13 +31,13 @@ Build several "kernels" to perform _online_ the $W\to3\pi$ scouting analysis:
   * `Puppi_w3p_PU200.dump`: 101 events of $W\to3\pi$ at PU 200 (signal)
   * All files have also a _.root_ version for double checking and debugging
 
-* `event_preparator`: contains the cpp/HLS code to be synthesized
-  * Firmware code under `event_preparator/src`
-  * Testbench file: `event_preparator/testbench.cc`
-  * Vitis HLS project file: `event_preparator/run_hls_w3p.tcl`
+* `event_processor`: contains the cpp/HLS code to be synthesized
+  * Firmware code under `event_processor/src`
+  * Testbench file: `event_processor/testbench.cc`
+  * Vitis HLS project file: `event_processor/run_hls_w3p.tcl`
 
 ## How to run the code
-For the moment, only the `event_preparator` code is implemented, and it's still lacking optimization in terms of both latency and resource consumption.
+For the moment, only the `event_processor` code is implemented, and it's still lacking optimization in terms of both latency and resource consumption.
 
 To run the code:
 * Connect to `cerere.mib.infn.it` and source the environment:
