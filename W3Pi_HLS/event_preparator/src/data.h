@@ -4,6 +4,7 @@
 #include "ap_int.h"
 #include "ap_fixed.h"
 #include <cstdint>
+#include <fstream>
 #include "math.h"
 
 struct Puppi {
