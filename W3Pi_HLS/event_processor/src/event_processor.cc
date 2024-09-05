@@ -5,8 +5,6 @@
 
 template<int N>
 Puppi::pt_t SumReduce(const Puppi::pt_t in[N]) {
-        // Recursive calls on first half and second half of the events
-        // FIXME: I don't understand how this splitting is implemented
        return SumReduce<N/2>(in) + SumReduce<N-N/2>(&in[N/2]);
 }
 
@@ -65,7 +63,7 @@ int BestSeedReduceIdx(const Puppi x[width], const bool masked[width], const int 
     #pragma HLS array_partition variable=indexesreduced complete
 
     // Loop to compare elements in pairs
-    LOOP_BSRI: for(int i = 0; i < halfWidth; ++i) {
+    LOOP_BSRI: for (int i = 0; i < halfWidth; ++i) {
         #pragma HLS unroll
         bool first_best = BestSeedIdx2(x[i*2], masked[i*2], x[i*2+1], masked[i*2+1]);
         reduced[i] = first_best ? x[i*2] : x[i*2+1];
@@ -227,7 +225,10 @@ void event_processor (const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet trip
 
     // Clear isolation array
     LOOP_EP1: for (unsigned int j = 0; j < NPUPPI_MAX; ++j)
+    {
+        #pragma HLS UNROLL
         output_absiso[j] = 0;
+    }
 
     // Define min/max isolation cones
     const dr2_t dr2_max = drToHwDr2(0.4), dr2_veto = drToHwDr2(0.1);
@@ -240,6 +241,7 @@ void event_processor (const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet trip
     {
         #pragma HLS UNROLL
         masked[i] = masked[i] ? masked[i] : (output_absiso[i]/input[i].hwPt) > 0.6;
+        //masked[i] = masked[i] || (output_absiso[i]/input[i].hwPt > 0.6); // Possible alternative, but I see no gain in performance from the report
     }
 
     // Debug printout
@@ -265,7 +267,8 @@ void event_processor (const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet trip
     // Build all triplets (pT ordered) starting from pivot
     int ntriplets = 0;
     LOOP_EP4: for (unsigned int i = 0; i < NPUPPI_MAX-1; i++)
-        for (unsigned int j = i+1; j < NPUPPI_MAX; j++)
+    {
+        LOOP_EP5: for (unsigned int j = i+1; j < NPUPPI_MAX; j++)
         {
             if (ntriplets == NTRIPLETS_MAX)
                 break;
@@ -276,6 +279,7 @@ void event_processor (const Puppi input[NPUPPI_MAX], Puppi & pivot, Triplet trip
             triplets[ntriplets] = (input[i].hwPt >= input[j].hwPt) ? Triplet(pivot_idx,i,j) : Triplet(pivot_idx,j,i);
             ntriplets++;
         }
+    }
 
     // Debug printout
     //std::cout << "---> My Triplets:" << std::endl;
