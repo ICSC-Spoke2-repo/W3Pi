@@ -19,6 +19,12 @@ typedef ap_uint<8> idx_t; // [0,255]
 // DeltaR type
 typedef ap_uint<24> dr2_t;
 
+// Cosine type
+typedef ap_int<10> cos_t; // 1 unit = 1/512
+
+// Hyperbolic-Cosine type
+typedef ap_uint<10> cosh_t; // 1 unit = 1/1024 (note the unsigned type)
+
 // Invariant mass types
 typedef ap_ufixed<16,10,AP_RND,AP_SAT> mass_t;
 
@@ -28,12 +34,12 @@ struct Puppi {
     typedef ap_ufixed<14,12,AP_RND,AP_SAT> pt_t;
     typedef ap_int<12> eta_t;
     typedef ap_int<11> phi_t;
-    typedef ap_int<10> z0_t; // 40cm / 0.1
-    static constexpr int INT_PI = 720;
+    typedef ap_int<10> z0_t;
+    static constexpr int INT_PI = 360;
     static constexpr int INT_2PI = 2*INT_PI;
-    static constexpr float ETAPHI_LSB = M_PI/INT_PI;
+    static constexpr float ETAPHI_LSB = M_PI/(2*INT_PI); // pi / 720 = 1/4 deg = 3.14159 / 720 = 0.0043633194
     static constexpr float ETA_CUT = 2.4/ETAPHI_LSB;
-    static constexpr float Z0_LSB = 0.05;
+    static constexpr float Z0_LSB = 0.5; // mm
     enum PID {H0=0, Gamma=1, HMinus=2, HPlus=3, EMinus=4, EPlus=5, MuMinus=6, MuPlus=7};
 
     // data members
@@ -89,11 +95,11 @@ struct Puppi {
     static pt_t  toHwPt(float pt)      { return pt_t(pt); }
     static eta_t toHwEta(float eta)    { return eta_t(round(eta/ETAPHI_LSB)); }
     static phi_t toHwPhi(float phi)    { return phi_t(round(phi/ETAPHI_LSB)); }
-    static z0_t  toHwZ0(float z0)      { return z0_t(std::round(z0 / Z0_LSB)); }
+    static z0_t  toHwZ0(float z0)      { return z0_t(round(z0/Z0_LSB)); }
     static float floatPt(pt_t hwPt)    { return hwPt.to_float(); }
     static float floatEta(eta_t hwEta) { return hwEta.to_int() * ETAPHI_LSB; }
     static float floatPhi(phi_t hwPhi) { return hwPhi.to_int() * ETAPHI_LSB; }
-    static float floatZ0(z0_t hwZ0)    { return hwZ0.to_float() * Z0_LSB; }
+    static float floatZ0(z0_t hwZ0)    { return hwZ0.to_int()  * Z0_LSB; }
 
     // Overload difference operator
     bool operator != (const Puppi& a) const

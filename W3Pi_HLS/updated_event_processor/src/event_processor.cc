@@ -1057,6 +1057,70 @@ dr2_t get_min_deltaR2 (const Puppi p0, const Puppi p1, const Puppi p2)
 }
 
 // ------------------------------------------------------------------
+// Trigonometric methods
+// Declare cosine LUT
+void _lut_cos_init(cos_t table_cos[1024])
+{
+    for (int i = 0; i < 1024; ++i)
+    {
+        // Get float value of phi values
+        float alpha = Puppi::ETAPHI_LSB * i;
+        int ic = cos(alpha) * 512; // Depends on cos_t LSB
+
+        // Fix boundaries depending on table size
+        if (ic > 511) ic = 511;
+        if (ic < -511) ic = -511;
+
+        // Fill table
+        table_cos[i] = ic;
+    }
+}
+
+// Get cos value from phi
+cos_t get_cos_phi (Puppi::phi_t phi)
+{
+    // Declare and fill cos LUT
+    cos_t _table_cos[1024];
+    _lut_cos_init(_table_cos);
+
+    // Change phi to only positive value
+    int iphi = phi;
+    if (phi < 0) iphi = -iphi;
+
+    // Return cos phi value
+    return _table_cos[iphi];
+}
+
+// Declare hyperbolic cosine LUT
+void _lut_cosh_init(cosh_t table_cosh[512])
+{
+    for (int i = 0; i < 512; ++i)
+    {
+        // Get float value of phi values
+        float alpha = Puppi::ETAPHI_LSB * i;
+        int ich = cosh(alpha) * 10;
+
+        // Fill table
+        table_cosh[i] = ich;
+    }
+}
+
+// Get cosh value from eta
+cosh_t get_cosh_eta (Puppi::eta_t eta)
+{
+    // Declare and fill cos LUT
+    cosh_t _table_cosh[1024];
+    _lut_cosh_init(_table_cosh);
+
+    // Change eta to only positive value
+    int ieta = eta;
+    if (eta < 0) ieta = -ieta;
+
+    // Return cosh eta value
+    return _table_cosh[ieta];
+}
+
+// ------------------------------------------------------------------
 // Prepare triplet inputs features:
 //  0. pi2_pt
 //  1. pi1_pt
@@ -1074,12 +1138,12 @@ void get_triplet_inputs (const Puppi selected[NPUPPI_SEL], idx_t idx0, idx_t idx
     // Fill BDT input for triplet
     BDT_inputs[0]  = selected[idx2].hwPt;
     BDT_inputs[1]  = selected[idx1].hwPt;
-    BDT_inputs[2]  = 0.2;
+    BDT_inputs[2]  = 0.2; // FIXME 2. m_01
     BDT_inputs[3]  = selected[idx0].charge() + selected[idx1].charge() + selected[idx2].charge();
     BDT_inputs[4]  = selected[idx0].hwZ0 - selected[idx2].hwZ0;
     BDT_inputs[5]  = selected[idx0].hwPt;
     BDT_inputs[6]  = selected[idx0].hwPt + selected[idx1].hwPt + selected[idx2].hwPt;
-    BDT_inputs[7]  = 0.7; //  7. m_02
+    BDT_inputs[7]  = 0.7; // FIXME 7. m_02
     BDT_inputs[8]  = get_max_dVz(selected[idx0].hwZ0, selected[idx1].hwZ0, selected[idx2].hwZ0);
     BDT_inputs[9]  = get_min_deltaR2_slow(selected[idx0], selected[idx1], selected[idx2]);
     BDT_inputs[10] = selected[idx2].hwEta;

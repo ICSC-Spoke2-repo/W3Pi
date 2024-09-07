@@ -7,6 +7,7 @@
 #define DEBUG 0
 #define DEEP_DEBUG 0
 #define OUTPUT_DEBUG 1
+#define NTEST 10
 
 // DUTs:
 //  1  : Masker
@@ -22,12 +23,13 @@
 //  41 : Merger7bis
 //  5  : get_triplet_inputs
 //  51 : get_event_inputs
+//  52 : get_cos_phi / get_cosh_eta
 //  6  : get_event_scores
 //  7  : get_highest_score
 //  10 : EventProcessor
 //  11 : EventProcessor7bis
 //  12 : EventProcessor7f
-#define DUT 37
+#define DUT 5
 
 // Pretty print of array
 template<typename T>
@@ -51,7 +53,7 @@ int main(int argc, char **argv) {
     std::fstream in("Puppi_w3p_PU200.dump", std::ios::in | std::ios::binary);
 
     // Loop on input data in chunks
-    for (int itest = 0, ntest = 10; itest < ntest && in.good(); ++itest) {
+    for (int itest = 0, ntest = NTEST; itest < ntest && in.good(); ++itest) {
 
         std::cout << "--------------------" << std::endl;
 
@@ -172,8 +174,12 @@ int main(int argc, char **argv) {
         Puppi ordered2_fw[NSUBARR][NSPLITS];
         idx_t selected_idxs_fw[NPUPPI_SEL];
         idx_t selected_idxs_ref[NPUPPI_SEL];
+        Puppi selected_fw[NPUPPI_SEL];
+        Puppi selected_ref[NPUPPI_SEL];
         Puppi final_fw[NPUPPI_SEL];
         Puppi final_ref[NPUPPI_SEL];
+        cos_t cosphi;
+        cosh_t cosheta;
         w3p_bdt::input_t inputs_fw[w3p_bdt::n_features];
         w3p_bdt::input_t inputs_ref[w3p_bdt::n_features];
         w3p_bdt::input_t BDT_inputs_fw[NTRIPLETS][w3p_bdt::n_features];
@@ -368,8 +374,6 @@ int main(int argc, char **argv) {
             merger_ref(slimmed_ref, merged_ref);
 
             // Get first 10 candidates
-            Puppi selected_fw[NPUPPI_SEL];
-            Puppi selected_ref[NPUPPI_SEL];
             for (unsigned int i = 0; i < NPUPPI_SEL; i++)
             {
                 selected_fw[i]  = merged_fw[i];
@@ -398,8 +402,6 @@ int main(int argc, char **argv) {
             merger_ref(slimmed_ref, merged_ref);
 
             // Get first 10 candidates
-            Puppi selected_fw[NPUPPI_SEL];
-            Puppi selected_ref[NPUPPI_SEL];
             for (unsigned int i = 0; i < NPUPPI_SEL; i++)
             {
                 selected_fw[i]  = merged_fw[i];
@@ -409,6 +411,34 @@ int main(int argc, char **argv) {
             // Get inputs for each triplet
             get_event_inputs(selected_fw, BDT_inputs_fw);
             get_event_inputs_ref(selected_ref, BDT_inputs_ref);
+        }
+        else if (DUT == 52)
+        {
+            masker(inputs, masked_fw);
+            masker_ref(inputs, masked_ref);
+
+            slimmer2(inputs, masked_fw, slimmed_fw);
+            slimmer2_ref(inputs, masked_ref, slimmed_ref);
+
+            orderer7bis(slimmed_fw, ordered_fw1, ordered_fw2, ordered_fw3, ordered_fw4,
+                                    ordered_fw5, ordered_fw6, ordered_fw7, ordered_fw8);
+            orderer7bis_ref(slimmed_ref, ordered_ref1, ordered_ref2, ordered_ref3, ordered_ref4,
+                                         ordered_ref5, ordered_ref6, ordered_ref7, ordered_ref8);
+
+            merger7bis(ordered_fw1, ordered_fw2, ordered_fw3, ordered_fw4,
+                       ordered_fw5, ordered_fw6, ordered_fw7, ordered_fw8,
+                       merged_fw);
+            merger_ref(slimmed_ref, merged_ref);
+
+            // Get first 10 candidates
+            for (unsigned int i = 0; i < NPUPPI_SEL; i++)
+            {
+                selected_fw[i]  = merged_fw[i];
+                selected_ref[i] = merged_ref[i];
+            }
+
+            cosphi = get_cos_phi(selected_fw[0].hwPhi);
+            cosheta = get_cosh_eta(selected_fw[0].hwEta);
         }
         else if (DUT == 6)
         {
@@ -429,8 +459,6 @@ int main(int argc, char **argv) {
             merger_ref(slimmed_ref, merged_ref);
 
             // Get first 10 candidates
-            Puppi selected_fw[NPUPPI_SEL];
-            Puppi selected_ref[NPUPPI_SEL];
             for (unsigned int i = 0; i < NPUPPI_SEL; i++)
             {
                 selected_fw[i]  = merged_fw[i];
@@ -464,8 +492,6 @@ int main(int argc, char **argv) {
             merger_ref(slimmed_ref, merged_ref);
 
             // Get first 10 candidates
-            Puppi selected_fw[NPUPPI_SEL];
-            Puppi selected_ref[NPUPPI_SEL];
             for (unsigned int i = 0; i < NPUPPI_SEL; i++)
             {
                 selected_fw[i]  = merged_fw[i];
@@ -695,6 +721,16 @@ int main(int argc, char **argv) {
                 std::cout << "- Event inputs:" << std::endl;
                 std::cout << " FW : "; printArray<w3p_bdt::input_t>(BDT_inputs_fw[0] , w3p_bdt::n_features);
                 std::cout << " REF: "; printArray<w3p_bdt::input_t>(BDT_inputs_ref[0], w3p_bdt::n_features);
+            }
+            else if (DUT == 52)
+            {
+                std::cout << "- Get Cos Phi:" << std::endl;
+                Puppi::phi_t myphi = selected_fw[0].hwPhi;
+                Puppi::eta_t myeta = selected_fw[0].hwEta;
+                std::cout << " - Phi    : " << myphi   << " -> toFLoat: " << Puppi::floatPhi(myphi) << std::endl;
+                std::cout << "   cosphi : " << cosphi  << " -> toFloat: " << cosphi/512.  << " / std::cos : " << std::cos(Puppi::floatPhi(myphi))  << std::endl;
+                std::cout << " - Eta    : " << myeta   << " -> toFLoat: " << Puppi::floatEta(myeta) << std::endl;
+                std::cout << "   cosheta: " << cosheta << " -> toFloat: " << cosheta/10. << " / std::cosh: " << std::cosh(Puppi::floatEta(myeta)) << std::endl;
             }
             else if (DUT == 6)
             {

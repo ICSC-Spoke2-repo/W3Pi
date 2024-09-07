@@ -23,6 +23,8 @@ open_project -reset "proj_v1"
 #set_top merger7bis
 #set_top merger7f
 #set_top get_triplet_inputs
+#set_top get_cos_phi
+#set_top get_cosh_eta
 #set_top event_inputs
 #set_top get_event_scores
 #set_top get_highest_score

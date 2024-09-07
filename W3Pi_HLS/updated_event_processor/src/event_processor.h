@@ -65,6 +65,9 @@ void merger7bis    (Puppi ordered1 [NSPLITS], Puppi ordered2 [NSPLITS],
                     Puppi merged[NPUPPI_MAX]);
 void merger7f      (Puppi ordered[NSUBARR][NSPLITS], Puppi merged[NPUPPI_MAX]);
 void get_triplet_inputs(const Puppi selected[NPUPPI_SEL], idx_t idx0, idx_t idx1, idx_t idx2, w3p_bdt::input_t BDT_inputs[w3p_bdt::n_features]);
+
+cos_t get_cos_phi      (Puppi::phi_t phi);
+cosh_t get_cosh_eta    (Puppi::eta_t eta);
 void get_event_inputs  (const Puppi selected[NPUPPI_SEL], w3p_bdt::input_t BDT_inputs[NTRIPLETS][w3p_bdt::n_features]);
 void get_event_scores  (w3p_bdt::input_t BDT_inputs[NTRIPLETS][w3p_bdt::n_features], w3p_bdt::score_t BDT_scores[NTRIPLETS]);
 void get_highest_score (w3p_bdt::score_t BDT_scores[NTRIPLETS], w3p_bdt::score_t & high_score);
