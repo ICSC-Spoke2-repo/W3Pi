@@ -3,3 +3,5 @@ W3PiDNN/trainings/
 W3PiDNN/hdf_files/predicted
 W3PiDNN/hdf_files/plots_*
 *.png
+*.log
+W3Pi_HLS/*/proj*/
