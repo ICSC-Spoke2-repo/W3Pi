@@ -1121,6 +1121,27 @@ cosh_t get_cosh_eta (Puppi::eta_t eta)
 }
 
 // ------------------------------------------------------------------
+// Invariant mass quared of pair of particles
+// m^2 = 2 * pT1 * pT2 * ( cosh(eta1 - eta2) - cos(phi1 - phi2) )
+// FIXME: this can possibly return a negative value??
+mass_t get_pair_mass (const Puppi & p1, const Puppi & p2)
+{
+    // Get dPhi and dEta
+    auto dphi = p1.hwPhi - p2.hwPhi;
+    if (dphi > Puppi::INT_PI) dphi -= Puppi::INT_2PI;
+    else if (dphi < -Puppi::INT_PI) dphi += Puppi::INT_2PI;
+    auto deta = p1.hwEta - p2.hwEta;
+
+    // Get cos and cosh
+    cos_t cosdPhi   = get_cos_phi(dphi);
+    cosh_t coshdEta = get_cosh_eta(deta);
+
+    // Compute and return final mass
+    mass_t pair_m = 2 * p1.hwPt * p2.hwPt * (coshdEta - cosdPhi);
+    return pair_m;
+}
+
+// ------------------------------------------------------------------
 // Prepare triplet inputs features:
 //  0. pi2_pt
 //  1. pi1_pt
@@ -1138,12 +1159,12 @@ void get_triplet_inputs (const Puppi selected[NPUPPI_SEL], idx_t idx0, idx_t idx
     // Fill BDT input for triplet
     BDT_inputs[0]  = selected[idx2].hwPt;
     BDT_inputs[1]  = selected[idx1].hwPt;
-    BDT_inputs[2]  = 0.2; // FIXME 2. m_01
+    BDT_inputs[2]  = get_pair_mass(selected[idx0], selected[idx1]);
     BDT_inputs[3]  = selected[idx0].charge() + selected[idx1].charge() + selected[idx2].charge();
     BDT_inputs[4]  = selected[idx0].hwZ0 - selected[idx2].hwZ0;
     BDT_inputs[5]  = selected[idx0].hwPt;
     BDT_inputs[6]  = selected[idx0].hwPt + selected[idx1].hwPt + selected[idx2].hwPt;
-    BDT_inputs[7]  = 0.7; // FIXME 7. m_02
+    BDT_inputs[7]  = get_pair_mass(selected[idx0], selected[idx2]);
     BDT_inputs[8]  = get_max_dVz(selected[idx0].hwZ0, selected[idx1].hwZ0, selected[idx2].hwZ0);
     BDT_inputs[9]  = get_min_deltaR2_slow(selected[idx0], selected[idx1], selected[idx2]);
     BDT_inputs[10] = selected[idx2].hwEta;

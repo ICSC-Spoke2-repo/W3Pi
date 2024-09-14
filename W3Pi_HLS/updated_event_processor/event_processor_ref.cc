@@ -396,6 +396,27 @@ dr2_t get_min_deltaR2_ref (const Puppi p0, const Puppi p1, const Puppi p2)
 }
 
 // ------------------------------------------------------------------
+// Invariant mass quared of pair of particles
+// m^2 = 2 * pT1 * pT2 * ( cosh(eta1 - eta2) - cos(phi1 - phi2) )
+mass_t get_pair_mass_ref (const Puppi & p1, const Puppi & p2)
+{
+    // Get dPhi and dEta
+    auto dphi = p1.hwPhi - p2.hwPhi;
+    if (dphi > Puppi::INT_PI) dphi -= Puppi::INT_2PI;
+    else if (dphi < -Puppi::INT_PI) dphi += Puppi::INT_2PI;
+    auto deta = p1.hwEta - p2.hwEta;
+
+    // Get cos and cosh
+    cos_t cosdPhi   = std::cos(Puppi::floatPhi(dphi));
+    cosh_t coshdEta = std::cosh(Puppi::floatEta(deta));
+
+    // Compute and return final mass
+    mass_t pair_m = 2 * p1.hwPt * p2.hwPt * ( coshdEta - cosdPhi );
+
+    return pair_m;
+}
+
+// ------------------------------------------------------------------
 // Prepare inputs features:
 //  0. pi2_pt
 //  1. pi1_pt
@@ -413,11 +434,11 @@ void get_triplet_inputs_ref (const Puppi selected[NPUPPI_SEL], idx_t idx0, idx_t
     // Fill BDT input for triplet
     BDT_inputs[0]  = selected[idx2].hwPt;
     BDT_inputs[1]  = selected[idx1].hwPt;
-    BDT_inputs[2]  = 0.2; //  2. m_01
+    BDT_inputs[2]  = get_pair_mass_ref(selected[idx0], selected[idx1]);
     BDT_inputs[4]  = selected[idx0].hwZ0 - selected[idx2].hwZ0;
     BDT_inputs[5]  = selected[idx0].hwPt;
     BDT_inputs[6]  = selected[idx0].hwPt + selected[idx1].hwPt + selected[idx2].hwPt;
-    BDT_inputs[7]  = 0.7; //  7. m_02
+    BDT_inputs[7]  = get_pair_mass_ref(selected[idx0], selected[idx2]);
     BDT_inputs[8]  = get_max_dVz_ref(selected[idx0].hwZ0, selected[idx1].hwZ0, selected[idx2].hwZ0);
     BDT_inputs[9]  = get_min_deltaR2_ref(selected[idx0], selected[idx1], selected[idx2]);
     BDT_inputs[10] = selected[idx2].hwEta;

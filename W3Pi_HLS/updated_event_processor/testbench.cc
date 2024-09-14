@@ -4,10 +4,10 @@
 #include <fstream>
 #include <bitset>
 
-#define DEBUG 0
+#define DEBUG 1
 #define DEEP_DEBUG 0
 #define OUTPUT_DEBUG 1
-#define NTEST 10
+#define NTEST 2
 
 // DUTs:
 //  1  : Masker
@@ -24,12 +24,13 @@
 //  5  : get_triplet_inputs
 //  51 : get_event_inputs
 //  52 : get_cos_phi / get_cosh_eta
+//  53 : get_pair_mass
 //  6  : get_event_scores
 //  7  : get_highest_score
 //  10 : EventProcessor
 //  11 : EventProcessor7bis
 //  12 : EventProcessor7f
-#define DUT 5
+#define DUT 53
 
 // Pretty print of array
 template<typename T>
@@ -180,6 +181,8 @@ int main(int argc, char **argv) {
         Puppi final_ref[NPUPPI_SEL];
         cos_t cosphi;
         cosh_t cosheta;
+        mass_t mass_fw;
+        mass_t mass_ref;
         w3p_bdt::input_t inputs_fw[w3p_bdt::n_features];
         w3p_bdt::input_t inputs_ref[w3p_bdt::n_features];
         w3p_bdt::input_t BDT_inputs_fw[NTRIPLETS][w3p_bdt::n_features];
@@ -439,6 +442,34 @@ int main(int argc, char **argv) {
 
             cosphi = get_cos_phi(selected_fw[0].hwPhi);
             cosheta = get_cosh_eta(selected_fw[0].hwEta);
+        }
+        else if (DUT == 53)
+        {
+            masker(inputs, masked_fw);
+            masker_ref(inputs, masked_ref);
+
+            slimmer2(inputs, masked_fw, slimmed_fw);
+            slimmer2_ref(inputs, masked_ref, slimmed_ref);
+
+            orderer7bis(slimmed_fw, ordered_fw1, ordered_fw2, ordered_fw3, ordered_fw4,
+                                    ordered_fw5, ordered_fw6, ordered_fw7, ordered_fw8);
+            orderer7bis_ref(slimmed_ref, ordered_ref1, ordered_ref2, ordered_ref3, ordered_ref4,
+                                         ordered_ref5, ordered_ref6, ordered_ref7, ordered_ref8);
+
+            merger7bis(ordered_fw1, ordered_fw2, ordered_fw3, ordered_fw4,
+                       ordered_fw5, ordered_fw6, ordered_fw7, ordered_fw8,
+                       merged_fw);
+            merger_ref(slimmed_ref, merged_ref);
+
+            // Get first 10 candidates
+            for (unsigned int i = 0; i < NPUPPI_SEL; i++)
+            {
+                selected_fw[i]  = merged_fw[i];
+                selected_ref[i] = merged_ref[i];
+            }
+
+            mass_fw  = get_pair_mass(selected_fw[0], selected_fw[1]);
+            mass_ref = get_pair_mass_ref(selected_ref[0], selected_ref[1]);
         }
         else if (DUT == 6)
         {
@@ -731,6 +762,12 @@ int main(int argc, char **argv) {
                 std::cout << "   cosphi : " << cosphi  << " -> toFloat: " << cosphi/512.  << " / std::cos : " << std::cos(Puppi::floatPhi(myphi))  << std::endl;
                 std::cout << " - Eta    : " << myeta   << " -> toFLoat: " << Puppi::floatEta(myeta) << std::endl;
                 std::cout << "   cosheta: " << cosheta << " -> toFloat: " << cosheta/10. << " / std::cosh: " << std::cosh(Puppi::floatEta(myeta)) << std::endl;
+            }
+            else if (DUT == 53)
+            {
+                std::cout << "- Inv mass:" << std::endl;
+                std::cout << " FW : " << mass_fw << std::endl;
+                std::cout << " REF: " << mass_ref << std::endl;
             }
             else if (DUT == 6)
             {

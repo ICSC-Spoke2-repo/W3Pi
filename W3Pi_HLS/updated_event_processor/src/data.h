@@ -26,7 +26,7 @@ typedef ap_int<10> cos_t; // 1 unit = 1/512
 typedef ap_uint<10> cosh_t; // 1 unit = 1/1024 (note the unsigned type)
 
 // Invariant mass types
-typedef ap_ufixed<16,10,AP_RND,AP_SAT> mass_t;
+typedef ap_ufixed<15,12,AP_RND,AP_SAT> mass_t; // [0, 4095] with LSB = 0.125 GeV
 
 // Puppi class
 struct Puppi {
