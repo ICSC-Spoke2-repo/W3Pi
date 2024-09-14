@@ -24,9 +24,9 @@ open_project -reset "proj_v1"
 #set_top merger7f
 #set_top get_cos_phi
 #set_top get_cosh_eta
-set_top get_pair_mass
+#set_top get_pair_mass
 #set_top get_triplet_inputs
-#set_top event_inputs
+set_top get_event_inputs
 #set_top get_event_scores
 #set_top get_highest_score
 #set_top EventProcessor
@@ -57,6 +57,6 @@ create_clock -period 5
 
 # Run
 csim_design
-#csynth_design
+csynth_design
 #export_design -flow syn -format xo
 exit

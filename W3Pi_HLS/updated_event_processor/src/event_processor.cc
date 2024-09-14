@@ -1172,19 +1172,25 @@ void get_triplet_inputs (const Puppi selected[NPUPPI_SEL], idx_t idx0, idx_t idx
 
 // ------------------------------------------------------------------
 // Get all event inputs
-// We use 10 candidates and 2 pivots --> 8 triplets:
-// (0,1,2)-(0,1,3)-(0,1,4)-(0,1,5)-(0,1,6)-(0,1,7)-(0,1,8)-(0,1,9)
+// - 8 triplets from: 5 from 1st+2nd, 2 from 1st+3rd and 1 from 2nd+3rd:
+// (0,1,2)-(0,1,3)-(0,1,4)-(0,1,5)-(0,1,6)-(0,2,3)-(0,2,3)-(1,2,3)
+// FIXME: with these are actually using only 7 candidates --> can reduce NPUPPI_SEL to 7!
 void get_event_inputs (const Puppi selected[NPUPPI_SEL], w3p_bdt::input_t BDT_inputs[NTRIPLETS][w3p_bdt::n_features])
 {
     #pragma HLS ARRAY_PARTITION variable=selected complete
     #pragma HLS ARRAY_PARTITION variable=BDT_inputs complete dim=0
 
-    LOOP_EVENT_INPUTS: for (unsigned int i = 0; i < NTRIPLETS; i++)
+    LOOP_EVENT_INPUTS: for (unsigned int i = 0; i < NTRIPLETS-3; i++)
     {
         #pragma HLS unroll
         idx_t third_idx = i + 2; // 2 pivots
-        get_triplet_inputs(selected, 0, 1, third_idx, BDT_inputs[i]);
+        get_triplet_inputs(selected, 0, 1, i, BDT_inputs[i]);
     }
+
+    get_triplet_inputs(selected, 0, 2, 3, BDT_inputs[5]);
+    get_triplet_inputs(selected, 0, 3, 4, BDT_inputs[6]);
+
+    get_triplet_inputs(selected, 1, 2, 3, BDT_inputs[7]);
 }
 
 // ------------------------------------------------------------------
