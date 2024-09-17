@@ -2,7 +2,7 @@
 #include "bitonic_hybrid.h"
 
 // ------------------------------------------------------------------
-// Select L1Puppi objects
+// Mask L1Puppi objects
 void masker (const Puppi input[NPUPPI_MAX], ap_uint<NPUPPI_MAX> & masked)
 {
     #pragma HLS ARRAY_PARTITION variable=input complete
@@ -10,7 +10,7 @@ void masker (const Puppi input[NPUPPI_MAX], ap_uint<NPUPPI_MAX> & masked)
     // Clear masked array
     masked = 0;
 
-    // Select
+    // Apply selections
     LOOP_MASKER_FILL: for (unsigned int i = 0; i < NPUPPI_MAX; i++)
     {
         #pragma HLS UNROLL
@@ -65,7 +65,7 @@ void slimmer2 (const Puppi input[NPUPPI_MAX], const ap_uint<NPUPPI_MAX> masked, 
 }
 
 // ------------------------------------------------------------------
-// Order selected indexes
+// Order masked indexes
 // bubbleSort algo from https://www.geeksforgeeks.org/bubble-sort-in-cpp/
 void bubbleSort (Puppi::pt_t pts[NPUPPI_SEL], idx_t ordered_idxs[NPUPPI_SEL])
 {
@@ -973,6 +973,20 @@ void merger7f (Puppi ordered[NSUBARR][NSPLITS], Puppi merged[NPUPPI_MAX])
     merge_sortC(merge5, merge6, merged);
 }
 
+// ------------------------------------------------------------------
+// Select first NPUPPI_SEL from the ordered list
+void selector(const Puppi merged[NPUPPI_MAX], Puppi selected[NPUPPI_SEL])
+{
+    #pragma HLS ARRAY_PARTITION variable=merged complete
+    #pragma HLS ARRAY_PARTITION variable=selected complete
+
+    LOOP_SELECTOR: for (unsigned int i = 0; i < NPUPPI_SEL; i++)
+    {
+        #pragma HLS UNROLL
+        selected[i] = merged[i];
+    }
+}
+
 
 // ------------------------------------------------------------------
 // Get maximum deltaVz
@@ -1174,22 +1188,24 @@ void get_triplet_inputs (const Puppi selected[NPUPPI_SEL], idx_t idx0, idx_t idx
 // Get all event inputs
 // - 8 triplets from: 5 from 1st+2nd, 2 from 1st+3rd and 1 from 2nd+3rd:
 // (0,1,2)-(0,1,3)-(0,1,4)-(0,1,5)-(0,1,6)-(0,2,3)-(0,2,3)-(1,2,3)
-// FIXME: with these are actually using only 7 candidates --> can reduce NPUPPI_SEL to 7!
 void get_event_inputs (const Puppi selected[NPUPPI_SEL], w3p_bdt::input_t BDT_inputs[NTRIPLETS][w3p_bdt::n_features])
 {
     #pragma HLS ARRAY_PARTITION variable=selected complete
     #pragma HLS ARRAY_PARTITION variable=BDT_inputs complete dim=0
 
+    // 5 triplets from 1st+2nd pivots
     LOOP_EVENT_INPUTS: for (unsigned int i = 0; i < NTRIPLETS-3; i++)
     {
         #pragma HLS unroll
-        idx_t third_idx = i + 2; // 2 pivots
+        idx_t third_idx = i + 2; // 2 pivots excluded
         get_triplet_inputs(selected, 0, 1, i, BDT_inputs[i]);
     }
 
+    // 2 triplets from 1st+3rd pivots
     get_triplet_inputs(selected, 0, 2, 3, BDT_inputs[5]);
-    get_triplet_inputs(selected, 0, 3, 4, BDT_inputs[6]);
+    get_triplet_inputs(selected, 0, 2, 4, BDT_inputs[6]);
 
+    // 1 triplet from 2nd+3rd pivots
     get_triplet_inputs(selected, 1, 2, 3, BDT_inputs[7]);
 }
 
@@ -1256,11 +1272,7 @@ void EventProcessor (const Puppi input[NPUPPI_MAX], Puppi selected[NPUPPI_SEL])
            merged);
 
     // Select only highest pT ordered-candidates
-    for (unsigned int i = 0; i < NPUPPI_SEL; i++)
-    {
-        #pragma HLS UNROLL
-        selected[i] = merged[i];
-    }
+    selector(merged, selected);
 }
 
 // EventProcessor7bis - same as event processor, but with 8 arrays
@@ -1292,11 +1304,7 @@ void EventProcessor7bis (const Puppi input[NPUPPI_MAX], w3p_bdt::score_t & max_s
     // Select only highest pT ordered-candidates
     Puppi selected[NPUPPI_SEL];
     #pragma HLS ARRAY_PARTITION variable=selected complete
-    LOOP_EP_SELECTED: for (unsigned int i = 0; i < NPUPPI_SEL; i++)
-    {
-        #pragma HLS UNROLL
-        selected[i] = merged[i];
-    }
+    selector(merged, selected);
 
     // Get inputs for each triplet
     w3p_bdt::input_t BDT_inputs[NTRIPLETS][w3p_bdt::n_features];
@@ -1335,11 +1343,7 @@ void EventProcessor7f (const Puppi input[NPUPPI_MAX], w3p_bdt::score_t & max_sco
     // Select only highest pT ordered-candidates
     Puppi selected[NPUPPI_SEL];
     #pragma HLS ARRAY_PARTITION variable=selected complete
-    LOOP_EP_SELECTED: for (unsigned int i = 0; i < NPUPPI_SEL; i++)
-    {
-        #pragma HLS UNROLL
-        selected[i] = merged[i];
-    }
+    selector(merged, selected);
 
     // Get inputs for each triplet
     w3p_bdt::input_t BDT_inputs[NTRIPLETS][w3p_bdt::n_features];

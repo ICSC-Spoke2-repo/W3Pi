@@ -9,9 +9,9 @@
 
 #define NPUPPI_MAX 208                    // Max number of input puppi candidates (208 from Puppi)
 #define NSUBARR 8                         // Number of sub-arrays
-#define NSPLITS ( NPUPPI_MAX / NSUBARR )  // Dimention of each sub-arrays
-#define NPUPPI_SEL 10                     // Max number of selected non-masked ordered candidates
-#define NTRIPLETS ( NPUPPI_SEL - 2 )      // Number of triplets: candidates minos 2 pivots
+#define NSPLITS ( NPUPPI_MAX / NSUBARR )  // Dimention of each sub-array
+#define NPUPPI_SEL 7                      // Number of selected non-masked ordered candidates
+#define NTRIPLETS 8                       // Number of triplets
 
 // Index type - should always be able to cover [0,NPUPPI_MAX] !
 typedef ap_uint<8> idx_t; // [0,255]
@@ -117,8 +117,8 @@ struct Puppi {
     friend std::ostream& operator << (std::ostream& os, const Puppi& a)
     {
         //os << a.floatPt() << "/" << a.floatEta() << "/" << a.floatPhi();
-        //os << a.floatPt() << ":" << a.floatEta() << "   ";
-        os << a.floatPt();
+        os << a.floatPt() << ":" << a.floatEta() << "   ";
+        //os << a.floatPt();
         return os;
     }
 };

@@ -359,6 +359,14 @@ void merger_ref (Puppi slimmed[NPUPPI_MAX], Puppi merged[NPUPPI_MAX])
 }
 
 // ------------------------------------------------------------------
+// Select first NPUPPI_SEL from the ordered list
+void selector_ref(const Puppi merged[NPUPPI_MAX], Puppi selected[NPUPPI_SEL])
+{
+    for (unsigned int i = 0; i < NPUPPI_SEL; i++)
+        selected[i] = merged[i];
+}
+
+// ------------------------------------------------------------------
 // Get maximum deltaVz
 Puppi::z0_t get_max_dVz_ref (Puppi::z0_t z0, Puppi::z0_t z1, Puppi::z0_t z2)
 {
@@ -530,8 +538,7 @@ void EventProcessor_ref (const Puppi input[NPUPPI_MAX], w3p_bdt::score_t & max_s
 
     // Select only highest pT ordered-candidates
     Puppi selected[NPUPPI_SEL];
-    for (unsigned int i = 0; i < NPUPPI_SEL; i++)
-        selected[i] = merged[i];
+    selector_ref(merged, selected);
 
     // Get inputs for each triplet
     w3p_bdt::input_t BDT_inputs[NTRIPLETS][w3p_bdt::n_features];
