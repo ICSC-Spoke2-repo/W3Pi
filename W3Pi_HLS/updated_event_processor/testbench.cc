@@ -758,10 +758,10 @@ int main(int argc, char **argv) {
                 std::cout << "- Get Cos Phi:" << std::endl;
                 Puppi::phi_t myphi = selected_fw[0].hwPhi;
                 Puppi::eta_t myeta = selected_fw[0].hwEta;
-                std::cout << " - Phi    : " << myphi   << " -> toFLoat: " << Puppi::floatPhi(myphi)  << std::endl;
-                std::cout << "   cosphi : " << cosphi  << " -> toFloat: " << cosphi/float(COS_LSB)   << " / std::cos : " << std::cos(Puppi::floatPhi(myphi))  << std::endl;
-                std::cout << " - Eta    : " << myeta   << " -> toFloat: " << Puppi::floatEta(myeta)  << std::endl;
-                std::cout << "   cosheta: " << cosheta << " -> toFloat: " << cosheta/float(COSH_LSB) << " / std::cosh: " << std::cosh(Puppi::floatEta(myeta)) << std::endl;
+                std::cout << " - Phi    : " << myphi   << " -> toFLoat: " << Puppi::floatPhi(myphi)     << std::endl;
+                std::cout << "   cosphi : " << cosphi  << " -> toFloat: " << cosphi/float(COSCOSH_LSB)  << " / std::cos : " << std::cos(Puppi::floatPhi(myphi))  << std::endl;
+                std::cout << " - Eta    : " << myeta   << " -> toFloat: " << Puppi::floatEta(myeta)     << std::endl;
+                std::cout << "   cosheta: " << cosheta << " -> toFloat: " << cosheta/float(COSCOSH_LSB) << " / std::cosh: " << std::cosh(Puppi::floatEta(myeta)) << std::endl;
             }
             else if (DUT == 53)
             {

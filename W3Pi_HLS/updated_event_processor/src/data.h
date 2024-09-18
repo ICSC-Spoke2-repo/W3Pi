@@ -19,15 +19,12 @@ typedef ap_uint<8> idx_t; // [0,255]
 // DeltaR type
 typedef ap_uint<24> dr2_t;
 
-// Cosine type
+// Cosine and Hyperbolic-Cosine types
 typedef ap_int<10> cos_t;
-#define COS_LSB 512
-#define COS_LUT_SIZE ( COS_LSB * 2 ) // times 2 because cos is between [-1, 1]
-
-// Hyperbolic-Cosine type
 typedef ap_uint<10> cosh_t;
-#define COSH_LSB 128
-#define COSH_LUT_SIZE 1024
+
+#define COSCOSH_LSB 256
+#define COSCOSH_LUT_SIZE 1024
 
 // Invariant mass types
 typedef ap_ufixed<15,12,AP_RND,AP_SAT> mass_t; // [0, 4095] with LSB = 0.125 GeV
