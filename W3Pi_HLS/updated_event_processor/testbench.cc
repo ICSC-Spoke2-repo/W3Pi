@@ -31,7 +31,7 @@
 //  10 : EventProcessor
 //  11 : EventProcessor7bis
 //  12 : EventProcessor7f
-#define DUT 12
+#define DUT 53
 
 // Pretty print of array
 template<typename T>
@@ -104,7 +104,6 @@ int main(int argc, char **argv) {
         // FIXME this should eventually be moved to the firmware, see:
         //       https://github.com/gpetruc/GlobalCorrelator_HLS/tree/tutorial-2023/4.stateful
         if (npuppi < 3) continue;
-        //if (itest != 4) continue;
 
         // Declare data variables
         Puppi inputs[NPUPPI_MAX];
@@ -759,10 +758,10 @@ int main(int argc, char **argv) {
                 std::cout << "- Get Cos Phi:" << std::endl;
                 Puppi::phi_t myphi = selected_fw[0].hwPhi;
                 Puppi::eta_t myeta = selected_fw[0].hwEta;
-                std::cout << " - Phi    : " << myphi   << " -> toFLoat: " << Puppi::floatPhi(myphi) << std::endl;
-                std::cout << "   cosphi : " << cosphi  << " -> toFloat: " << cosphi/512.  << " / std::cos : " << std::cos(Puppi::floatPhi(myphi))  << std::endl;
-                std::cout << " - Eta    : " << myeta   << " -> toFLoat: " << Puppi::floatEta(myeta) << std::endl;
-                std::cout << "   cosheta: " << cosheta << " -> toFloat: " << cosheta/10. << " / std::cosh: " << std::cosh(Puppi::floatEta(myeta)) << std::endl;
+                std::cout << " - Phi    : " << myphi   << " -> toFLoat: " << Puppi::floatPhi(myphi)  << std::endl;
+                std::cout << "   cosphi : " << cosphi  << " -> toFloat: " << cosphi/float(COS_LSB)   << " / std::cos : " << std::cos(Puppi::floatPhi(myphi))  << std::endl;
+                std::cout << " - Eta    : " << myeta   << " -> toFloat: " << Puppi::floatEta(myeta)  << std::endl;
+                std::cout << "   cosheta: " << cosheta << " -> toFloat: " << cosheta/float(COSH_LSB) << " / std::cosh: " << std::cosh(Puppi::floatEta(myeta)) << std::endl;
             }
             else if (DUT == 53)
             {

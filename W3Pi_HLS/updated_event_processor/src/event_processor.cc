@@ -1072,29 +1072,31 @@ dr2_t get_min_deltaR2 (const Puppi p0, const Puppi p1, const Puppi p2)
 
 // ------------------------------------------------------------------
 // Trigonometric methods
-// Declare cosine LUT
-void _lut_cos_init(cos_t table_cos[1024])
+// Declare and fill cosine LUT
+void _lut_cos_init(cos_t table_cos[COS_LUT_SIZE])
 {
-    for (int i = 0; i < 1024; ++i)
+    for (int i = 0; i < COS_LUT_SIZE; ++i)
     {
-        // Get float value of phi values
+        // Get float value of phi
         float alpha = Puppi::ETAPHI_LSB * i;
-        int ic = cos(alpha) * 512; // Depends on cos_t LSB
 
-        // Fix boundaries depending on table size
-        if (ic > 511) ic = 511;
-        if (ic < -511) ic = -511;
+        // Get cos values (times LSB)
+        int ic = cos(alpha) * COS_LSB;
+
+        // Fix boundaries depending on (half) table size
+        if (ic >  (COS_LUT_SIZE/2-1)) ic =  (COS_LUT_SIZE/2-1);
+        if (ic < -(COS_LUT_SIZE/2-1)) ic = -(COS_LUT_SIZE/2-1);
 
         // Fill table
         table_cos[i] = ic;
     }
 }
 
-// Get cos value from phi
+// Get cos value from LUT
 cos_t get_cos_phi (Puppi::phi_t phi)
 {
     // Declare and fill cos LUT
-    cos_t _table_cos[1024];
+    cos_t _table_cos[COS_LUT_SIZE];
     _lut_cos_init(_table_cos);
 
     // Change phi to only positive value
@@ -1105,25 +1107,30 @@ cos_t get_cos_phi (Puppi::phi_t phi)
     return _table_cos[iphi];
 }
 
-// Declare hyperbolic cosine LUT
-void _lut_cosh_init(cosh_t table_cosh[512])
+// Declare and fill hyperbolic cosine LUT
+void _lut_cosh_init(cosh_t table_cosh[COSH_LUT_SIZE])
 {
-    for (int i = 0; i < 512; ++i)
+    for (int i = 0; i < COSH_LUT_SIZE; ++i)
     {
-        // Get float value of phi values
+        // Get float value of eta
         float alpha = Puppi::ETAPHI_LSB * i;
-        int ich = cosh(alpha) * 10;
+
+        // Get cosh values (times LSB)
+        int ich = cosh(alpha) * COSH_LSB;
+
+        // Fix upper boundary
+        if (ich > (COSH_LUT_SIZE-1)) ich = (COSH_LUT_SIZE-1);
 
         // Fill table
         table_cosh[i] = ich;
     }
 }
 
-// Get cosh value from eta
+// Get cosh value from LUT
 cosh_t get_cosh_eta (Puppi::eta_t eta)
 {
     // Declare and fill cos LUT
-    cosh_t _table_cosh[1024];
+    cosh_t _table_cosh[COSH_LUT_SIZE];
     _lut_cosh_init(_table_cosh);
 
     // Change eta to only positive value
@@ -1152,6 +1159,7 @@ mass_t get_pair_mass (const Puppi & p1, const Puppi & p2)
 
     // Compute and return final mass
     mass_t pair_m = 2 * p1.hwPt * p2.hwPt * (coshdEta - cosdPhi);
+
     return pair_m;
 }
 
