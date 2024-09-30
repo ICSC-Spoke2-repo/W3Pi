@@ -60,4 +60,5 @@ create_clock -period 5
 csim_design
 #csynth_design
 #export_design -flow syn -format xo
+#export_design -flow impl -format ip_catalog -rtl vhdl
 exit
